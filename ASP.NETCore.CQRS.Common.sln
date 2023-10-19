@@ -3,11 +3,33 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CQRS.Common", "CQRS.Common\CQRS.Common.shproj", "{8E9F89D6-FF1A-46C3-AD4E-156C894167C2}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "UserDefined", "UserDefined\UserDefined.shproj", "{07589209-0B9E-4DD2-9AF8-50C2EC1572FB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserDefined.API", "UserDefined.API\UserDefined.API.csproj", "{53D5BF49-7514-4362-9A9A-B4DF045F11F5}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{53D5BF49-7514-4362-9A9A-B4DF045F11F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53D5BF49-7514-4362-9A9A-B4DF045F11F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53D5BF49-7514-4362-9A9A-B4DF045F11F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53D5BF49-7514-4362-9A9A-B4DF045F11F5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1C5A2C7D-AB17-4374-B2EA-836118B4D487}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		UserDefined\UserDefined.projitems*{07589209-0b9e-4dd2-9af8-50c2ec1572fb}*SharedItemsImports = 13
+		CQRS.Common\CQRS.Common.projitems*{53d5bf49-7514-4362-9a9a-b4df045f11f5}*SharedItemsImports = 5
+		UserDefined\UserDefined.projitems*{53d5bf49-7514-4362-9a9a-b4df045f11f5}*SharedItemsImports = 5
+		CQRS.Common\CQRS.Common.projitems*{8e9f89d6-ff1a-46c3-ad4e-156c894167c2}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

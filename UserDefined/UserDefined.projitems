@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>07589209-0b9e-4dd2-9af8-50c2ec1572fb</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>UserDefined.Models</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\SubjectInDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\SubjectOutDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\FacultyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Subject.cs" />
+  </ItemGroup>
+</Project>

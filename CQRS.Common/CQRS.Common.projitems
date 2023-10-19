@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>8e9f89d6-ff1a-46c3-ad4e-156c894167c2</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>CQRS.Common</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Attributes\DBConnectAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Attributes\ModelAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Comparison\Operation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Constants\Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contexts\IModelContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contexts\ModelContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\Contract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\ICommandContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\IQueryContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CQRS\Command.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CQRS\ICommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CQRS\IQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CQRS\Query.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Exceptions\ModelException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\Abilities.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Messages\Message.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Configurations\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Contracts\Contract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\DBContext\DBContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Enums\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Middlewares\ExceptionMiddleWare.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Middlewares\HttpExceptionFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Models\KeylessModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Models\Model.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Services\CommandService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Services\QueryService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Swagger\OperationFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Swagger\EnumSchemaFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Model.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ModelEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ModelGuid.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ModelInt32.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ModelInt64.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parameters\ModelParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parameters\ObjParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parameters\SearchParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\QueryService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CommandService.cs" />
+  </ItemGroup>
+</Project>
