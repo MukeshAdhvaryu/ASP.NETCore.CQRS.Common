@@ -11,21 +11,40 @@ namespace CQRS.Common.Parameters
     /// <summary>
     /// Reprents a parameter which provides criteria for search.
     /// </summary>
-    public class SearchParameter: ObjParameter
+    public interface ISearchParameter 
     {
-        public static readonly SearchParameter Empty = new SearchParameter("", null);
+        /// <summary>
+        /// Gets name of this object.
+        /// </summary>
+        string Name { get; }
 
-        public SearchParameter(){}
-        public SearchParameter(string name, object? value, Criteria criteria = Criteria.Equal):
-            base(value, name)
-        {
-            Criteria = criteria;
-        }
+        /// <summary>
+        /// Gets value of this object.
+        /// </summary>
+        object? Value { get; }
 
         /// <summary>
         /// Gets criteria for the intended search.
         /// </summary>
-        public Criteria Criteria { get; }
+        Criteria Criteria { get; }
+    }
+
+    /// <summary>
+    /// Reprents a parameter which provides criteria for search.
+    /// </summary>
+    public struct SearchParameter: ISearchParameter
+    {
+        public static readonly SearchParameter Empty = new SearchParameter();
+
+        public SearchParameter(string name, Criteria criteria, object? value)
+        {
+            Name = name;
+            Criteria = criteria;
+            Value = value;
+        }
+        public string Name { get; set; }
+        public object? Value { get; set; }
+        public Criteria Criteria { get; set; }
     }
 }
 #endif

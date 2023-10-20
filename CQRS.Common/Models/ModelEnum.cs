@@ -57,13 +57,6 @@ namespace CQRS.Common.Models
             return default(TEnum);
         }
         #endregion
-
-        #region TRY PARSE ID
-        protected override bool TryParseID(object value, out TEnum newID)
-        {
-            return Enum.TryParse(value.ToString(), true, out newID);
-        }
-        #endregion
     }
     #endregion
 }

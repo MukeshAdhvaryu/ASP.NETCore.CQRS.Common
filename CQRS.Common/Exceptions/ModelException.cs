@@ -119,22 +119,6 @@ namespace CQRS.Common.Exceptions
             }
         }
         #endregion
-
-        #region CREATE
-        /// <summary>
-        /// Creates an instance of ModelException.
-        /// </summary>
-        /// <param name="message">Custom message provided by user.</param>
-        /// <param name="type">Type of the model exception.</param>
-        /// <param name="exception">Original exception raised by some operation performed on model.</param>
-        /// <returns></returns>
-        public static ModelException Create(string message, ExceptionType type, Exception? exception = null)
-        {
-            if(exception == null) 
-                return new ModelException(message, type);
-            return new ModelException(message, type, exception);
-        }
-        #endregion
     }
     #endregion
 }

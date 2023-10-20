@@ -27,22 +27,13 @@ namespace CQRS.Common.Models
     /// <summary>
     /// This interface represents a model.
     /// </summary>
-    internal partial interface IExModel : IModel, IExCopyable, IExParamParser, IExModelExceptionSupplier
+    internal partial interface IExModel : IEntity, IExCopyable, IExParamParser, IExModelExceptionSupplier
     //-:cnd:noEmit
 #if MODEL_USEDTO
         , IExModelToDTO
 #endif
-#if MODEL_SEARCHABLE
-        , IMatch
-#endif
     //+:cnd:noEmit
     {
-        /// <summary>
-        /// Provides a list of names of properties - must be handled while copying from data supplied from model binder's BindModelAsync method.
-        /// If the list is not provided, System.Reflecteion will be used to obtain names of the properties defined in this model.
-        /// </summary>
-        IReadOnlyList<string> GetPropertyNames(bool forSearch = false);
-
         /// <summary>
         /// Gets initial data.
         /// </summary>
@@ -62,11 +53,6 @@ namespace CQRS.Common.Models
     /// </summary>
     /// <typeparam name="TID"></typeparam>
     public interface IModel<TID> : IModel
-        //-:cnd:noEmit
-#if MODEL_SEARCHABLE
-        , IMatch
-#endif
-        //+:cnd:noEmit
         where TID : struct
     {
         /// <summary>
@@ -104,14 +90,29 @@ namespace CQRS.Common.Models
         /// <returns>Newly generated id.</returns>
         TID GetNewID();
 
-        /// <summary>
+        // <summary>
         /// Tries to parse the given value to the type of ID
         /// Returns parsed value if succesful, otherwise default value.
         /// </summary>
         /// <param name="value">Value to be parsed as TID.</param>
         /// <param name="newID">Parsed value.</param>
         /// <returns>True if succesful, otherwise false</returns>
-        bool TryParseID(object value, out TID newID);
+        bool TryParseID(object? value, out TID newID);
+    }
+    #endregion
+
+    #region IEntity
+    /// <summary>
+    /// Represents a model which can provide get accesor to extract properties it contains.
+    /// </summary>
+    public interface IEntity: IModel
+    {
+        /// <summary>
+        /// Gets value of the property specified by property Name.
+        /// </summary>
+        /// <param name="propertyName">Name of the property which to get value for.</param>
+        /// <returns>Value of property if found, otherwise null.</returns>
+        object? this[string? propertyName] { get; }
     }
     #endregion
 
@@ -120,12 +121,7 @@ namespace CQRS.Common.Models
     /// This interface represents a self-referencing model.
     /// </summary>
     /// <typeparam name="TModel"></typeparam>
-    public partial interface ISelfModel<TModel> : IModel
-        //-:cnd:noEmit
-#if MODEL_SEARCHABLE
-        , IMatch
-#endif
-        //+:cnd:noEmit
+    public partial interface ISelfModel<TModel> : IEntity
         where TModel : ISelfModel<TModel>
     {
     }

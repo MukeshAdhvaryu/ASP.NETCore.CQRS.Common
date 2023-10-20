@@ -2,7 +2,6 @@
 
 using CQRS.Common.Attributes;
 using CQRS.Common.Models;
-using CQRS.Common.Parameters;
 
 namespace UserDefined.Models.Models
 {
@@ -16,76 +15,91 @@ namespace UserDefined.Models.Models
     public class FacultyInfo: KeylessModel<FacultyInfo>, IFacultyInfo
     {
         Faculty faculty;
-
-        public Faculty Faculty { get => faculty; set => faculty = value; }
-
-        [ReadOnly(true)]
-        public string? Description { get; private set; }
-
         public FacultyInfo() { }
         public FacultyInfo(Faculty faculty, string? description = null)
         {
             Faculty = faculty;
             Description = description;
         }
-        protected override Message Parse(ObjParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false)
-        {
-            var value = parameter is ModelParameter ? ((ModelParameter)parameter).FirstValue : parameter.Value;
-            currentValue = null;
-            parsedValue = null;
-            var name = parameter.Name;
 
-            switch (name)
+        public Faculty Faculty { get => faculty; set => faculty = value; }
+
+        [ReadOnly(true)]
+        public string? Description { get; private set; }
+
+        public override object? this[string? propertyName]
+        {
+            get
             {
-                case nameof(Faculty):
-                    currentValue = faculty;
+                if (string.IsNullOrEmpty(propertyName))
+                    return null;
+
+                propertyName = propertyName.ToLower();
+                switch (propertyName)
+                {
+                    case "faculty":
+                        return Faculty;
+                    case "description":
+                        return Description;
+                    default:
+                        break;
+                }
+                return base[propertyName];
+            }
+        }
+
+        protected override bool Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed)
+        {
+            parsedValue = null;
+            propertyName = propertyName?.ToLower();
+            if (string.IsNullOrEmpty(propertyName) || propertyValue == null)
+                return false;
+
+            switch (propertyName)
+            {
+                case "faculty":
                     Faculty f;
-                    if (value is Faculty)
+                    if (propertyValue is Faculty)
                     {
-                        var result = (Faculty)value;
-                        parsedValue = result;
-                        if (updateValueIfParsed)
-                            faculty = result;
-                        return Message.Sucess(name);
-                    }
-                    if (value is string && (Enum.TryParse((string)value, out f)) ||
-                        value != null && (Enum.TryParse(value.ToString(), out f)))
-                    {
-                        parsedValue = f;
+                        f = (Faculty)propertyValue;
                         if (updateValueIfParsed)
                             faculty = f;
-                        return Message.Sucess(name);
+                        parsedValue = f;
+                        return true;
                     }
-                    if (value == null)
-                        return Message.MissingValue(name);
-                    break;
-                case nameof(Description):
-                    currentValue = Description;
-
-                    if (value != null)
+                    if (propertyValue is string && (Enum.TryParse((string)propertyValue, out f)) ||
+                        propertyValue != null && (Enum.TryParse(propertyValue.ToString(), out f)))
                     {
-                        parsedValue = parameter.Value.ToString();
                         if (updateValueIfParsed)
-                            Description = parsedValue.ToString();
-                        return Message.Sucess(name);
+                            faculty = f;
+                        parsedValue = f;
+                        return true;
                     }
-                    return Message.Ignored(name);
+                    break;
+                case "description":
+                    if (propertyValue != null)
+                    {
+                        var value = propertyValue.ToString();
+                        if (updateValueIfParsed)
+                            Description = value;
+                        parsedValue = value;
+                        return true;
+                    }
+                    break;
                 default:
                     break;
             }
-            return Message.Failure(name);
+            return false;
         }
-
-        protected override Task<bool> CopyFrom(IModel model)
+        protected override Task<Tuple<bool, string>> CopyFrom(IModel model)
         {
-            if(model is IFacultyInfo)
-            {
-                var info = (IFacultyInfo)model;
-                Faculty = info.Faculty;
-                Description = info.Description;
-                return Task.FromResult(true);
-            }
-            return Task.FromResult(false);
+            if (!(model is IFacultyInfo))
+                return Task.FromResult(Tuple.Create(false, GetModelExceptionMessage(ExceptionType.InAppropriateModelSupplied, model?.ToString())));
+
+            var info = (IFacultyInfo)model;
+            Faculty = info.Faculty;
+            Description = info.Description;
+            return Task.FromResult(Tuple.Create(true, "All success"));
         }
 
         protected override IEnumerable<IModel> GetInitialData()
@@ -98,9 +112,13 @@ namespace UserDefined.Models.Models
             };
         }
 
+        //-:cnd:noEmit
+#if MODEL_USEDTO
         protected override IModel? ToDTO(Type type)
         {
             return base.ToDTO(type);
         }
+#endif
+        //-:cnd:noEmit
     }
 }

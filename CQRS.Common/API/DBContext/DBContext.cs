@@ -16,7 +16,7 @@ using CQRS.Common.Models;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace CQRS.Common.Minimal.API
+namespace CQRS.Common.API
 {
     #region DBCONTEXT
     public partial class DBContext : DbContext, IModelContext
@@ -70,7 +70,7 @@ namespace CQRS.Common.Minimal.API
 #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
         class CommandObject<TOutDTO, TModel, TID> : Command<TOutDTO, TModel, TID>
             #region TYPE CONSTRINTS
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel> 
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -166,7 +166,7 @@ namespace CQRS.Common.Minimal.API
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
         class QueryObject<TOutDTO, TModel, TID> : Query<TOutDTO, TModel>, IQuery<TOutDTO, TModel, TID>
             #region TYPE CONSTRINTS
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel> 
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -230,7 +230,7 @@ namespace CQRS.Common.Minimal.API
 
         class QueryObject<TOutDTO, TModel> : Query<TOutDTO, TModel>
             #region TYPE CONSTRINTS
-    where TOutDTO : class, IModel, new()
+    where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TModel> 
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)

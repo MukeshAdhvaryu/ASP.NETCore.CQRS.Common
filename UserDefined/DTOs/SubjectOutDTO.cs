@@ -1,8 +1,7 @@
 ﻿//-:cnd:noEmit
 #if MODEL_USEDTO
 //+:cnd:noEmit
-using System.Text.Json.Serialization;
-
+using CQRS.Common.Attributes;
 using CQRS.Common.Models;
 
 using UserDefined.Models;
@@ -10,20 +9,20 @@ using UserDefined.Models;
 namespace UserDefined.DTOs
 {
     #region SubjectOutDTO
-    public class SubjectOutDTO : IModel
+    [Model(Name = "Subject")]
+    public struct SubjectOutDTO : IModel
     {
-        public SubjectOutDTO() { }
-        public SubjectOutDTO(Subject subject)
+        public SubjectOutDTO(ISubject subject)
         {
             Name = subject.Name;
             Faculty = subject.Faculty;
             ID = subject.ID;
+            Book = subject.Book;
         }
         public string? Name { get; set; }
-
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Faculty Faculty { get; set; }
-        public int ID { get; }
+        public int ID { get; set; }
+        public Book Book { get; set; }
     }
     #endregion
 }

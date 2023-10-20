@@ -13,7 +13,7 @@ using Microsoft.OpenApi.Models;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace CQRS.Common.Minimal.API
+namespace CQRS.Common.API
 {
     public class EnumSchemaFilter : ISchemaFilter
     {

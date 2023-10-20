@@ -8,11 +8,17 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);MODEL_USESWAGGER;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;MODEL_SEARCHABLE;</DefineConstants>
+    <DefineConstants>
+      $(DefineConstants);MODEL_USESWAGGER;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;
+      MODEL_SEARCHABLE; MODEL_APPENDBULK;MODEL_UPDATEBULK;MODEL_DELETEBULK;MODEL_FROMQUERY;
+    </DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants);MODEL_USESWAGGER;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;MODEL_SEARCHABLE;</DefineConstants>
+    <DefineConstants>
+      $(DefineConstants);MODEL_USESWAGGER;MODEL_DELETABLE; MODEL_APPENDABLE;MODEL_UPDATABLE;MODEL_USEDTO;
+      MODEL_SEARCHABLE; MODEL_APPENDBULK;MODEL_UPDATEBULK;MODEL_DELETEBULK;MODEL_FROMQUERY;
+    </DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="$(DefineConstants.Contains('MODEL_USESWAGGER'))">
@@ -33,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

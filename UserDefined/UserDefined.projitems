@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\SubjectInDTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\SubjectOutDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Book.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\FacultyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Subject.cs" />
   </ItemGroup>

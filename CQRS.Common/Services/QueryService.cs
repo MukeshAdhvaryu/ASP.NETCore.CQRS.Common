@@ -18,7 +18,7 @@ namespace CQRS.Common.Services
     /// <typeparam name="TContext">Instance which implements IModelContext.</typeparam>
     public partial class QueryService<TOutDTO, TModel, TContext> : Contract, IQueryContract<TOutDTO, TModel>
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -124,7 +124,7 @@ namespace CQRS.Common.Services
     public partial class QueryService<TOutDTO, TModel, TID, TContext> :
         QueryService<TOutDTO, TModel, TContext>, IQueryContract<TOutDTO, TModel, TID> 
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)

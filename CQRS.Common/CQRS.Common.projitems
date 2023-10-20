@@ -9,8 +9,21 @@
     <Import_RootNamespace>CQRS.Common</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)API\Configurations\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Contracts\Contract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\DBContext\DBContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Enums\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Middlewares\ExceptionMiddleWare.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Middlewares\HttpExceptionFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Models\KeylessModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Models\Model.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Services\CommandService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Services\QueryService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Swagger\EnumSchemaFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API\Swagger\OperationFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\DBConnectAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ModelAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parsers\Parser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Comparison\Operation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants\Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contexts\IModelContext.cs" />
@@ -24,30 +37,23 @@
     <Compile Include="$(MSBuildThisFileDirectory)CQRS\Query.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Exceptions\ModelException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Globals\Globals.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\Abilities.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Messages\Message.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Configurations\Configuration.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Contracts\Contract.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\DBContext\DBContext.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Enums\Enums.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Middlewares\ExceptionMiddleWare.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Middlewares\HttpExceptionFilter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Models\KeylessModel.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Models\Model.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Services\CommandService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Services\QueryService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Swagger\OperationFilter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Minimal.API\Swagger\EnumSchemaFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Model.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ModelEnum.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ModelGuid.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ModelInt32.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ModelInt64.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Parameters\ModelParameter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Parameters\ObjParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parameters\SearchParameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\QueryService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CommandService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\ArgSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\Attributes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\TestQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\TestModelDTO.cs" />
+    <Compile Include="..\CQRS.Common\Tests\TestCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tests\Verifier.cs" />
   </ItemGroup>
 </Project>

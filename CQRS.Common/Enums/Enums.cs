@@ -3,6 +3,8 @@
  Author: Mukesh Adhvaryu.
 */
 
+using System.Text.Json.Serialization;
+
 namespace CQRS.Common.Models
 {
     /// <summary>
@@ -41,15 +43,16 @@ namespace CQRS.Common.Models
     /// <summary>
     /// Enum AndOr
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum AndOr : byte
     {
         /// <summary>
-        /// The and
+        /// The and operator
         /// </summary>
         AND,
 
         /// <summary>
-        /// The or
+        /// The or operator
         /// </summary>
         OR,
     }
@@ -105,6 +108,7 @@ namespace CQRS.Common.Models
         /// The string equal no case
         /// </summary>
         StringEqualNoCase = 10,
+
         /// <summary>
         /// The string number greater than
         /// </summary>
@@ -113,10 +117,22 @@ namespace CQRS.Common.Models
         /// The string number less than
         /// </summary>
         StringNumLessThan = 12,
+
+        /// <summary>
+        /// The string number greater than
+        /// </summary>
+        StringGreaterThan = 13,
+
+        /// <summary>
+        /// The string number less than
+        /// </summary>
+        StringLessThan = 14,
+
         /// <summary>
         /// The not equal
         /// </summary>
         NotEqual = -1,
+
         /// <summary>
         /// The not greater than
         /// </summary>
@@ -160,11 +176,31 @@ namespace CQRS.Common.Models
         /// <summary>
         /// The not string greater than
         /// </summary>
-        NotStringGreaterThan = -12,
+        NotStringGreaterThan = -14,
         /// <summary>
         /// The not string less than
         /// </summary>
-        NotStringLessThan = -13
+        NotStringLessThan = -15,
+
+        /// <summary>
+        /// Checks if value falls between the range of two other values.
+        /// </summary>
+        Between = 16,
+
+        /// <summary>
+        /// Checks if value does not fall between the range of two other values.
+        /// </summary>
+        NotBetween = -17,
+
+        /// <summary>
+        /// Checks for the value if it matches with any of other values provided as paramters.
+        /// </summary>
+        In = 17,
+
+        /// <summary>
+        /// Checks for the value if it does not match with any of other values provided as paramters.
+        /// </summary>
+        NotIn = 18,
     }
     #endregion
 
@@ -177,11 +213,21 @@ namespace CQRS.Common.Models
         /// <summary>
         /// The between
         /// </summary>
-        Between = 0,
+        Between = Criteria.Between,
         /// <summary>
         /// The not between
         /// </summary>
-        NotBetween = -1,
+        NotBetween = Criteria.NotBetween,
+
+        /// <summary>
+        /// Values In
+        /// </summary>
+        In = Criteria.In,
+
+        /// <summary>
+        /// Values Not In
+        /// </summary>
+        NotIn = Criteria.NotIn,
     }
     #endregion
 
@@ -206,9 +252,14 @@ namespace CQRS.Common.Models
         NoModelsFound,
 
         /// <summary>
-        /// Represents an exception to indicate that no model is supplied where it required for example Add or Update functions.
+        /// Represents an exception to indicate that no model is supplied where it is required for example Add or Update functions.
         /// </summary>
         NoModelSupplied,
+
+        /// <summary>
+        /// Represents an exception to indicate that no models are supplied where they are required for example AddRange or UpdateRange functions.
+        /// </summary>
+        NoModelsSupplied,
 
         /// <summary>
         /// Represents an exception to indicate that a negative number is supplied as a count of models to be returned.
@@ -259,6 +310,37 @@ namespace CQRS.Common.Models
         /// Represents an exception to indicate that the supplied model context is not valid or compitible with the object intended to use it.
         /// </summary>
         InvalidContext,
+
+        /// <summary>
+        /// Represents an exception to indicate that no IDs are supplied where they are required for example UpdateRange or DeleteRange functions.
+        /// </summary>
+        NoIDsSupplied,
+
+        /// <summary>
+        /// Represents an exception to indicate that an inappropriate model is suppllied for Update or UpdateRange functions.
+        /// </summary>
+        InAppropriateModelSupplied,
+
+        /// <summary>
+        /// Indicates that operation is failed.
+        /// </summary>
+        Failure,
+
+        /// <summary>
+        /// Indicates that operation is ignored for a specified call.
+        /// </summary>
+        IgnoredValue,
+
+        /// <summary>
+        /// Indicates that operation  for a specified call could not be performed because of missing value.
+        /// </summary>
+        MissingValue,
+
+        /// <summary>
+        /// Indicates that operation for a specified call could not be performed because of missing value.
+        /// And, the value is required to be supplied.
+        /// </summary>
+        MissingRequiredValue,
     }
     #endregion
 
@@ -300,27 +382,44 @@ namespace CQRS.Common.Models
         Singleton,
     }
     #endregion
+
+    #region KNOWN ID TYPE
+    public enum IDType
+    {
+        Unknown = 0,
+        Int16,
+        Int32,
+        Int64,
+        Byte,
+        Enum,
+        Guid,
+        UInt16,
+        UInt32,
+        UInt64,
+        SByte
+    }
+    #endregion
 }
 
 namespace CQRS.Common.Services
 {
     /// <summary>
-    /// 
+    /// Indicates a type of contract.
     /// </summary>
     public enum ContractKind: byte
     {
         /// <summary>
-        /// 
+        /// Indicates that the type of contract is command contract.
         /// </summary>
         Cmd,
 
         /// <summary>
-        /// 
+        /// Indicates that the type of contract is query contract.
         /// </summary>
         Qry,
 
         /// <summary>
-        /// 
+        /// Indicates that the type of contract is both command and query contract.
         /// </summary>
         Cmd_Qry
     }

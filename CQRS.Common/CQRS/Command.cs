@@ -25,7 +25,7 @@ namespace CQRS.Common
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public abstract class Command<TOutDTO, TModel, TID> : IExCommand<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel> 
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -82,9 +82,9 @@ namespace CQRS.Common
             else
             {
                 result = new TModel();
-                bool ok = await ((IExCopyable)result).CopyFrom(model);
-                if (!ok)
-                    throw DummyModel.GetModelException(ExceptionType.ModelCopyOperationFailed, model.ToString());
+                var ok = await ((IExCopyable)result).CopyFrom(model);
+                if (!ok.Item1)
+                    throw DummyModel.GetModelException(ExceptionType.ModelCopyOperationFailed, model.ToString() + System.Environment.NewLine + ok.Item2);
             }
             try
             {
@@ -99,6 +99,42 @@ namespace CQRS.Common
             }
         }
         protected abstract void AddModel(TModel model);
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region UPDATE
+        //-:cnd:noEmit
+#if (MODEL_UPDATABLE)
+        /// <summary>
+        /// Updates a specified model.
+        /// </summary>
+        /// <param name="modelInterface">Model to update.</param>
+        /// <returns>Task with type of Model as result.</returns>
+        /// <exception cref="Exception"></exception>
+        public async virtual Task<TOutDTO?> Update(TID id, IModel? model)
+        {
+            if (model == null)
+                throw DummyModel.GetModelException(ExceptionType.NoModelSupplied, id.ToString());
+
+            var result = await Get(id);
+            if (result == null)
+                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForID, id.ToString());
+
+            var ok = await ((IExCopyable)result).CopyFrom(model);
+            if (!ok.Item1)
+                throw DummyModel.GetModelException(ExceptionType.ModelCopyOperationFailed, model.ToString() + System.Environment.NewLine + ok.Item2);
+            try
+            {
+                await SaveChanges();
+                return ToDTO(result);
+            }
+            catch (Exception e)
+            {
+                throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailed, id.ToString(), e);
+            }
+            throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailed, id.ToString());
+        }
 #endif
         //+:cnd:noEmit
         #endregion
@@ -138,37 +174,213 @@ namespace CQRS.Common
         //+:cnd:noEmit
         #endregion
 
-        #region UPDATE
+        #region ADD RANGE
         //-:cnd:noEmit
-#if (MODEL_UPDATABLE)
+#if (MODEL_APPENDABLE) && MODEL_APPENDBULK
         /// <summary>
-        /// Updates a specified model.
+        /// Adds new models based on an enumerable of models specified.
         /// </summary>
-        /// <param name="modelInterface">Model to update.</param>
-        /// <returns>Task with type of Model as result.</returns>
-        /// <exception cref="Exception"></exception>
-        public async virtual Task<TOutDTO?> Update(TID id, IModel? model)
+        /// <param name="models">An enumerable of models to add to the model collection.</param>
+        /// <returns></returns>
+        public async Task<Tuple<IEnumerable<TOutDTO?>?, string>> AddRange<T>(IEnumerable<T?>? models)
+            where T : IModel
         {
-            if (model == null)
-                throw DummyModel.GetModelException(ExceptionType.NoModelSupplied, id.ToString());
+            if(models == null)
+                throw DummyModel.GetModelException(ExceptionType.NoModelsSupplied);
+            
+            List<TModel> results = new List<TModel> ();  
+            var sb = new List<string?>();
+            int i = -1;
 
-            var result = await Get(id);
-            if (result == null)
-                throw DummyModel.GetModelException(ExceptionType.NoModelFoundForID, id.ToString());
+            foreach (var model in models)
+            {
+                ++i;
+                if (model == null)
+                {
+                    sb.Add(DummyModel.GetModelExceptionMessage(ExceptionType.NoModelSupplied));
+                    sb.Add("Index: " + i);
+                    continue;
+                }
 
-            bool ok = await ((IExCopyable)result).CopyFrom(model);
-            if (!ok)
-                throw DummyModel.GetModelException(ExceptionType.ModelCopyOperationFailed, model.ToString());
-            try
-            {
-                await SaveChanges();
-                return ToDTO(result);
+                TModel result = (model is TModel)? (TModel)(object)model:  new TModel();
+                var ok = await ((IExCopyable)result).CopyFrom(model);
+                if (!ok.Item1)
+                {
+                    sb.Add(DummyModel.GetModelExceptionMessage(ExceptionType.ModelCopyOperationFailed, model.ToString()));
+                    sb.Add("Index: " + i + ": " + ok.Item2);
+                    continue;
+                }
+                try
+                {
+                    AddModel(result);
+                    results.Add(result);
+                }
+                catch (Exception e)
+                {
+                    var message = DummyModel.GetModelExceptionMessage(ExceptionType.AddOperationFailed, model.ToString());
+                    sb.Add("Index: " + i + ": " + ok.Item2);
+                    sb.Add(e.Message);
+                    if (!Globals.IsProductionEnvironment)
+                        sb.Add(e.StackTrace);
+                }
             }
-            catch (Exception e)
+
+            if (results.Count == 0)
             {
-                throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailed, id.ToString(), e);
+                if (sb.Count > 0)
+                {
+                    var mainMessage = sb[0];
+                    throw DummyModel.GetModelException(ExceptionType.NoModelsSupplied, mainMessage,
+                        new Exception(string.Join(Environment.NewLine, sb.Skip(1).Where(s => !string.IsNullOrEmpty(s)))));
+                }
+                throw DummyModel.GetModelException(ExceptionType.NoModelsSupplied, sb.ToString());
             }
-            throw DummyModel.GetModelException(ExceptionType.UpdateOperationFailed, id.ToString());
+
+            await SaveChanges();
+            return Tuple.Create(ToDTO(results), sb.Count > 0? string.Join(Environment.NewLine, 
+                sb.Skip(1).Where(s => !string.IsNullOrEmpty(s))): "All Sucess");
+        }
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region UPDATE RANGE
+        //-:cnd:noEmit
+#if (MODEL_UPDATABLE) && MODEL_UPDATEBULK
+        /// <summary>
+        /// Updates models based on an enumerable of models specified.
+        /// </summary>
+        /// <param name="IDs">An enumerable of ID to be used to update models matching those IDs from the model collection.</param>
+        /// <param name="models">An enumerable of models to update the model collection.</param>
+        /// <returns>Collection of models which are successfully updated and a message for those which are not.</returns>
+        public async Task<Tuple<IEnumerable<TOutDTO>?, string>> UpdateRange<T>(IEnumerable<TID>? IDs, IEnumerable<T?>? models)
+            where T : IModel
+        {
+            if(models == null)
+                throw DummyModel.GetModelException(ExceptionType.NoModelsSupplied, IDs == null? "Even IDs are not supplied!": "IDs are supplied though!");
+            
+            if(IDs == null)
+                throw DummyModel.GetModelException(ExceptionType.NoIDsSupplied, models == null? "Even models are not supplied!": "models are supplied though!");
+
+            List<TModel> results = new List<TModel> ();
+            var sb = new List<string?>();
+
+            var idList = IDs.ToArray();
+            var modelList = models.ToArray();
+            var idCount = idList.Length;
+            var modelCount = modelList.Length;
+
+            for (int i = 0; i < idCount; i++)
+            {
+                if (i >= modelCount)
+                {
+                    sb.Add(DummyModel.GetModelExceptionMessage(ExceptionType.NoModelSupplied, modelList[i]?.ToString()));
+                    sb.Add("For: " + idList[i] + " at Index: " + i);
+                    continue;
+                }
+                var model = modelList[i];
+                if (model == null)
+                {
+                    sb.Add(DummyModel.GetModelExceptionMessage(ExceptionType.NoModelSupplied));
+                    sb.Add("For: " + idList[i] + " at Index: " + i);
+                    continue;
+                }
+                var id = idList[i];
+                var result = await Get(id);
+                if (result == null)
+                {
+                    sb.Add(DummyModel.GetModelExceptionMessage(ExceptionType.NoModelFoundForID, id.ToString() + " at Index: " + i));
+                    continue;
+                }
+
+                var ok = await ((IExCopyable)result).CopyFrom(model);
+                if (!ok.Item1)
+                {
+                    sb.Add(DummyModel.GetModelExceptionMessage(ExceptionType.ModelCopyOperationFailed, model.ToString()));
+                    sb.Add("For: " + idList[i] + " at Index: " + i);
+                    sb.Add(ok.Item2);
+                    continue;
+                }
+                results.Add(result);
+            }
+
+            if (results.Count == 0)
+            {
+                if (sb.Count > 0)
+                {
+                    var mainMessage = sb[0];
+                    throw DummyModel.GetModelException(ExceptionType.NoModelsSupplied, mainMessage,
+                        new Exception(string.Join(Environment.NewLine, sb.Skip(1).Where(s => !string.IsNullOrEmpty(s)))));
+                }
+                throw DummyModel.GetModelException(ExceptionType.NoModelsSupplied, sb.ToString());
+            }
+
+            await SaveChanges();
+            return Tuple.Create(ToDTO(results), sb.Count > 0 ? string.Join(Environment.NewLine,
+                sb.Skip(1).Where(s => !string.IsNullOrEmpty(s))) : "All Sucess");
+        }
+#endif
+        //+:cnd:noEmit
+        #endregion
+
+        #region DELETE RANGE
+        //-:cnd:noEmit
+#if (MODEL_DELETABLE) && MODEL_DELETEBULK
+        /// <summary>
+        /// Deletes new models based on an enumerable of IDs specified.
+        /// </summary>
+        /// <param name="IDs">An enumerable of ID to be used to delete models matching those IDs from the model collection.</param>
+        /// <returns>Collection of models which are successfully deleted and a message for those which are not.</returns>        
+        public async Task<Tuple<IEnumerable<TOutDTO>?, string>> DeleteRange(IEnumerable<TID>? IDs)
+        {
+            if(IDs == null)
+                throw DummyModel.GetModelException(ExceptionType.NoIDsSupplied);
+
+            var results = new List<TModel>();
+            var sb = new List<string?>();
+
+            int i = -1;
+            foreach (var id in IDs)
+            {
+                ++i;
+                var model = await Get(id);
+                if (model == null)
+                {
+                    sb.Add(DummyModel.GetModelExceptionMessage(ExceptionType.NoModelFoundForID, id.ToString()));
+                    continue;
+                }
+                try
+                {
+                    var result = DeleteModel(model);
+                    if (result)
+                    {
+                        results.Add(model);
+                    }
+                }
+                catch (Exception e)
+                {
+                    var message = DummyModel.GetModelExceptionMessage(ExceptionType.DeleteOperationFailed, "For ID: " + id.ToString() + " at Index: " + i );
+                    sb.Add(message);
+                    sb.Add(e.Message);
+                    if (!Globals.IsProductionEnvironment)
+                        sb.Add(e.StackTrace);
+                }
+            }
+
+            if (results.Count == 0)
+            {
+                if (sb.Count > 0)
+                {
+                    var mainMessage = sb[0];
+                    throw DummyModel.GetModelException(ExceptionType.NoModelsSupplied, mainMessage,
+                        new Exception(string.Join(Environment.NewLine, sb.Skip(1).Where(s => !string.IsNullOrEmpty(s)))));
+                }
+                throw DummyModel.GetModelException(ExceptionType.NoModelsSupplied, sb.ToString());
+            }
+
+            await SaveChanges();
+            return Tuple.Create(ToDTO(results), sb.Count > 0 ? string.Join(Environment.NewLine,
+                sb.Skip(1).Where(s => !string.IsNullOrEmpty(s))) : "All Sucess");
         }
 #endif
         //+:cnd:noEmit
@@ -182,7 +394,7 @@ namespace CQRS.Common
         protected abstract TModel? GetFirstModel();
         TModel? IFirstModel<TModel>.GetFirstModel() =>
             GetFirstModel();
-        IModel? IFirstModel.GetFirstModel() => 
+        IModel? IFirstModel.GetFirstModel() =>
             GetFirstModel();
         #endregion
 

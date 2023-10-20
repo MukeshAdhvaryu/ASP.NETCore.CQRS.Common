@@ -21,7 +21,7 @@ namespace CQRS.Common
         /// <param name="criteria">The criteria.</param>
         /// <param name="right">The right value.</param>
         /// <returns>true if comparison with criteria is successful, otherwise false.</returns>
-        public static bool Compare<T>(T left, Criteria criteria, object right) =>
+        public static bool Compare<T>(T? left, Criteria criteria, object? right) =>
             Operator<T>.Compare(left, right, criteria);
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace CQRS.Common
         /// <param name="criteria">The criteria.</param>
         /// <param name="right">The right value.</param>
         /// <returns>true if comparison with criteria is successful, otherwise false.</returns>
-        public static bool Compare<T>(T left, Criteria criteria, T right) =>
+        public static bool Compare<T>(T? left, Criteria criteria, T right) =>
             Operator<T>.Compare(left, right, criteria);
 
         /// <summary>
@@ -40,11 +40,10 @@ namespace CQRS.Common
         /// </summary>
         /// <typeparam name="T">Type of value.</typeparam>
         /// <param name="criteria">The criteria.</param>
-        /// <param name="value1">The value1.</param>
-        /// <param name="value2">The value2.</param>
+        /// <param name="values">Values.</param>
         /// <returns>true if comparison with criteria is successful, otherwise false.</returns>
-        public static bool CompareRange<T>(T left, MultCriteria criteria, T value1, T value2) =>
-            Operator<T>.CompareRange(left, criteria, value1, value2);
+        public static bool CompareRange<T>(T? left, MultCriteria criteria, params T?[] values) =>
+            Operator<T>.CompareRange(left, criteria, values);
 
         /// <summary>
         /// Compares the range.
@@ -52,11 +51,10 @@ namespace CQRS.Common
         /// <typeparam name="T">Type of value.</typeparam>
         /// <param name="left">The left.</param>
         /// <param name="criteria">The criteria.</param>
-        /// <param name="value1">The value1.</param>
-        /// <param name="value2">The value2.</param>
+        /// <param name="values">Values.</param>
         /// <returns>true if comparison with criteria is successful, otherwise false.</returns>
-        public static bool CompareRange<T>( T left, MultCriteria criteria, object value1, object value2) =>
-            Operator<T>.CompareRange(left, criteria, value1, value2);
+        public static bool CompareRange<T>(T? left, MultCriteria criteria, params object?[] values) =>
+            Operator<T>.CompareRange(left, criteria, values);
 
         /// <summary>
         /// Compares the specified right.
@@ -65,7 +63,7 @@ namespace CQRS.Common
         /// <param name="left">The left.</param>
         /// <param name="right">The right.</param>
         /// <returns>true if comparison with criteria is successful, otherwise false.</returns>
-        public static bool Compare<T>( T left, T right) =>
+        public static bool Compare<T>(T? left, T? right) =>
             Operator<T>.Compare(left, right, Criteria.Equal);
         #endregion
 
@@ -76,6 +74,8 @@ namespace CQRS.Common
         /// <typeparam name="T"></typeparam>
         static class Operator<T>
         {
+            const int max = 14;
+
             #region VARIABLES
             enum Status
             {
@@ -85,24 +85,14 @@ namespace CQRS.Common
             }
 
             /// <summary>
-            /// The operation
-            /// </summary>
-            static Func<T, T, T>[] operation = new Func<T, T, T>[6];
-
-            /// <summary>
             /// The comparison
             /// </summary>
-            static Func<T, T, bool>[] comparison = new Func<T, T, bool>[13];
-
-            /// <summary>
-            /// The otasks
-            /// </summary>
-            static Status[] otasks = new Status[6];
+            static Func<T?, T?, bool>[] comparison = new Func<T?, T?, bool>[max+1];
 
             /// <summary>
             /// The ctasks
             /// </summary>
-            static Status[] ctasks = new Status[13];
+            static Status[] ctasks = new Status[max+1];
             #endregion
 
             #region PRIVATE METHODS
@@ -113,7 +103,7 @@ namespace CQRS.Common
             /// <param name="id">The identifier.</param>
             static void CreateOperator(Criteria OperatorType, int id)
             {
-                Func<T, T, bool> func = null;
+                Func<T?, T?, bool> func = null;
 
                 try
                 {
@@ -121,60 +111,68 @@ namespace CQRS.Common
                     {
                         case Criteria.Equal:
                         case Criteria.NotEqual:
-                            func = new Func<T, T, bool>(Operator<T>.Equal);
+                            func = new Func<T?, T?, bool>(Operator<T>.Equal);
                             break;
                         case Criteria.GreaterThan:
                         case Criteria.NotGreaterThan:
-                            func = new Func<T, T, bool>(Operator<T>.Greater);
+                            func = new Func<T?, T?, bool>(Operator<T>.Greater);
                             break;
                         case Criteria.LessThan:
                         case Criteria.NotLessThan:
-                            func = new Func<T, T, bool>(Operator<T>.Less);
+                            func = new Func<T?, T?, bool>(Operator<T>.Less);
                             break;
                         case Criteria.Occurs:
                         case Criteria.NotOccurs:
-                            func = new Func<T, T, bool>(Operator<T>.Occurs);
+                            func = new Func<T?, T?, bool>(Operator<T>.Occurs);
                             break;
                         case Criteria.BeginsWith:
                         case Criteria.NotBeginsWith:
-                            func = new Func<T, T, bool>(Operator<T>.Begins);
+                            func = new Func<T?, T?, bool>(Operator<T>.Begins);
                             break;
                         case Criteria.EndsWith:
                         case Criteria.NotEndsWith:
-                            func = new Func<T, T, bool>(Operator<T>.Ends);
+                            func = new Func<T?, T?, bool>(Operator<T>.Ends);
                             break;
                         case Criteria.OccursNoCase:
                         case Criteria.NotOccursNoCase:
-                            func = new Func<T, T, bool>(Operator<T>.OccursIgnoreCase);
+                            func = new Func<T?, T?, bool>(Operator<T>.OccursIgnoreCase);
                             break;
                         case Criteria.BeginsWithNoCase:
                         case Criteria.NotBeginsWithNoCase:
-                            func = new Func<T, T, bool>(Operator<T>.BeginsIgnoreCase);
+                            func = new Func<T?, T?, bool>(Operator<T>.BeginsIgnoreCase);
                             break;
                         case Criteria.EndsWithNoCase:
                         case Criteria.NotEndsWithNoCase:
-                            func = new Func<T, T, bool>(Operator<T>.EndsIgnoreCase);
+                            func = new Func<T?, T?, bool>(Operator<T>.EndsIgnoreCase);
                             break;
                         case Criteria.StringEqual:
                         case Criteria.NotStrEqual:
-                            func = new Func<T, T, bool>(Operator<T>.StrEqual);
+                            func = new Func<T?, T?, bool>(Operator<T>.StrEqual);
                             break;
                         case Criteria.StringEqualNoCase:
                         case Criteria.NotStrEqualNoCase:
-                            func = new Func<T, T, bool>(Operator<T>.StrEqualIgnoreCase);
+                            func = new Func<T?, T?, bool>(Operator<T>.StrEqualIgnoreCase);
                             break;
                         case Criteria.StringNumGreaterThan:
-                            func = new Func<T, T, bool>(Operator<T>.StrGreater);
+                            func = new Func<T?, T?, bool>(Operator<T>.StrNumGreater);
                             break;
                         case Criteria.StringNumLessThan:
-                            func = new Func<T, T, bool>(Operator<T>.StrLess);
+                            func = new Func<T?, T?, bool>(Operator<T>.StrNumLess);
+                            break;
+                        case Criteria.StringGreaterThan:
+                        case Criteria.NotStringGreaterThan:
+                            func = new Func<T?, T?, bool>(Operator<T>.StrGreater);
+                            break;
+                        case Criteria.StringLessThan:
+                        case Criteria.NotStringLessThan:
+                            func = new Func<T?, T?, bool>(Operator<T>.StrLess);
                             break;
                         default:
-                            if (id <= 12) { ctasks[id] = Status.NotSupported; comparison[id] = null; }
+                            if (id <= max) { ctasks[id] = Status.NotSupported; comparison[id] = null; }
                             break;
                     }
 
-                    if (id <= 12) { ctasks[id] = Status.Supported; comparison[id] = func; }
+                    if (id <= max) { ctasks[id] = Status.Supported; comparison[id] = func; }
                 }
                 catch
                 {
@@ -198,241 +196,279 @@ namespace CQRS.Common
                     //}
                 }
             }
+
             /// <summary>
             /// Equals the specified a.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool Equal(T a, T b)
+            static bool Equal(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
-
-                if (a_ && b_)
-                {
-                    return true;
-                }
-                else if (a_)
-                {
+                if (a == null && b == null)
+                    return true;                
+                else if (a == null)
                     return false;
-                }
+
                 else if (a is IEquatable<T>)
-                {
-                    return (a as IEquatable<T>).Equals(b);
-                }
+                    return ((IEquatable<T>)a).Equals(b);
+                
                 else if (a is IComparable<T>)
-                {
-                    return (a as IComparable<T>).CompareTo(b) == 0;
-                }
+                    return ((IComparable<T>)a).CompareTo(b) == 0;
+
                 else if (a is IComparable)
-                {
-                    return (a as IComparable).CompareTo(b) == 0;
-                }
-                else if (object.ReferenceEquals(a, b))
-                {
+                    return ((IComparable)a).CompareTo(b) == 0;
+
+                else if (ReferenceEquals(a, b))
                     return true;
-                }
                 else
-                {
                     return a.Equals(b);
-                }
             }
+           
             /// <summary>
             /// Greaters the specified a.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool Greater(T a, T b)
+            static bool Greater(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
+                if (a == null && b == null)
+                    return true;
+                else if (a == null)
+                    return false;
 
-                if (a_ && b_) { return false; }
-                else if (a_) { return false; }
                 else if (a is IComparable<T>)
-                {
-                    return (a as IComparable<T>).CompareTo(b) > 0;
-                }
+                    return ((IComparable<T>)a).CompareTo(b) > 0;
+
                 else if (a is IComparable)
-                {
-                    return (a as IComparable).CompareTo(b) > 0;
-                }
-                else { return false; }
+                    return ((IComparable)a).CompareTo(b) > 0;
+
+                return false;
+                
             }
+          
             /// <summary>
             /// Lesses the specified a.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool Less(T a, T b)
+            static bool Less(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
+                if (a == null && b == null)
+                    return true;
+                else if (a == null)
+                    return false;
 
-                if (a_ && b_) { return false; }
-                else if (a_) { return true; }
                 else if (a is IComparable<T>)
-                {
-                    return (a as IComparable<T>).CompareTo(b) < 0;
-                }
+                    return ((IComparable<T>)a).CompareTo(b) < 0;
+
                 else if (a is IComparable)
-                {
-                    return (a as IComparable).CompareTo(b) < 0;
-                }
-                else { return false; }
+                    return ((IComparable)a).CompareTo(b) < 0;
+
+                return false;
             }
+          
             /// <summary>
             /// Occurses the specified a.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool Occurs(T a, T b)
+            static bool Occurs(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
-
-                if (a_ || b_) { return false; }
-                return a.ToString().IndexOf(b.ToString()) != -1;
+                var stra = a?.ToString();
+                var strb = b?.ToString();
+                if(stra == null || strb == null)
+                    return false;
+                return stra?.IndexOf(strb) != -1;
             }
+          
             /// <summary>
             /// Occurses the ignore case.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool OccursIgnoreCase(T a, T b)
+            static bool OccursIgnoreCase(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
+                var stra = a?.ToString()?.ToLower();
+                var strb = b?.ToString()?.ToLower();
+                if (stra == null || strb == null)
+                    return false;
 
-                if (a_ || b_) { return false; }
-                return a.ToString().ToUpper().IndexOf(b.ToString().ToUpper()) != -1;
+                return stra?.IndexOf(strb) != -1;
             }
+         
             /// <summary>
             /// Beginses the specified a.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool Begins(T a, T b)
+            static bool Begins(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
-
-                if (a_ || b_) { return false; }
-                return a.ToString().StartsWith(b.ToString());
+                var stra = a?.ToString();
+                var strb = b?.ToString();
+                if (stra == null || strb == null)
+                    return false;
+                return stra.StartsWith(strb);
             }
+        
             /// <summary>
             /// Beginses the ignore case.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool BeginsIgnoreCase(T a, T b)
+            static bool BeginsIgnoreCase(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
-
-                if (a_ || b_) { return false; }
-                return a.ToString().ToUpper().StartsWith(b.ToString().ToUpper());
+                var stra = a?.ToString()?.ToLower();
+                var strb = b?.ToString()?.ToLower();
+                if (stra == null || strb == null)
+                    return false;
+                return stra.StartsWith(strb);
             }
+        
             /// <summary>
             /// Endses the specified a.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool Ends(T a, T b)
+            static bool Ends(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
-
-                if (a_ || b_) { return false; }
-                return a.ToString().EndsWith(b.ToString());
+                var stra = a?.ToString();
+                var strb = b?.ToString();
+                if (stra == null || strb == null)
+                    return false;
+                return stra.EndsWith(strb);
             }
+        
             /// <summary>
             /// Endses the ignore case.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool EndsIgnoreCase(T a, T b)
+            static bool EndsIgnoreCase(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
-
-                if (a_ || b_) { return false; }
-                return a.ToString().ToUpper().EndsWith(b.ToString().ToUpper());
+                var stra = a?.ToString();
+                var strb = b?.ToString();
+                if (stra == null || strb == null)
+                    return false;
+                return stra.EndsWith(strb);
             }
+         
             /// <summary>
             /// Strings the equal.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool StrEqual(T a, T b)
+            static bool StrEqual(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
-
-                if (a_ || b_) { return false; }
-                return a.ToString() == (b.ToString());
+                var stra = a?.ToString();
+                var strb = b?.ToString();
+                return stra == strb;
             }
+         
             /// <summary>
             /// Strings the equal ignore case.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool StrEqualIgnoreCase(T a, T b)
+            static bool StrEqualIgnoreCase(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
-
-                if (a_ || b_) { return false; }
-                return a.ToString().ToUpper() == (b.ToString().ToUpper());
+                var stra = a?.ToString()?.ToLower();
+                var strb = b?.ToString()?.ToLower();
+                return stra == strb;
             }
+         
             /// <summary>
             /// Strings the greater.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool StrGreater(T a, T b)
+            static bool StrNumGreater(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
+                var stra = a?.ToString();
+                var strb = b?.ToString();
 
-                if (a_ && b_) { return false; }
-                else if (a_) { return false; }
-                else if (b_) { return true; }
-                else
-                {
-                    return NumericStringComparer.Compare(a.ToString(), b.ToString()) > 0;
-                }
+                if (stra == null && strb == null) 
+                    return false;
+                
+                if (stra == null) 
+                    return false; 
+                else if (strb == null) 
+                    return true;
+                return NumericStringComparer.Compare(stra, strb) > 0;
             }
+          
             /// <summary>
             /// Strings the less.
             /// </summary>
             /// <param name="a">a.</param>
             /// <param name="b">The b.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            static bool StrLess(T a, T b)
+            static bool StrNumLess(T? a, T? b)
             {
-                bool a_ = (object)a == null;
-                bool b_ = (object)b == null;
+                var stra = a?.ToString();
+                var strb = b?.ToString();
 
-                if (a_ && b_) { return false; }
-                else if (b_) { return false; }
-                else if (a_) { return true; }
-                else
-                {
-                    return NumericStringComparer.Compare(a.ToString(), b.ToString()) < 0;
-                }
+                if (stra == null && strb == null)
+                    return false;
+
+                if (stra == null)
+                    return true;
+                else if (strb == null)
+                    return false;
+                return NumericStringComparer.Compare(stra, strb) < 0;
+            }
+
+            /// <summary>
+            /// Strings the greater.
+            /// </summary>
+            /// <param name="a">a.</param>
+            /// <param name="b">The b.</param>
+            /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+            static bool StrGreater(T? a, T? b)
+            {
+                var stra = a?.ToString();
+                var strb = b?.ToString();
+
+                if (stra == null && strb == null)
+                    return false;
+
+                if (stra == null)
+                    return false;
+                else if (strb == null)
+                    return true;
+                return stra.CompareTo(strb) > 0;
+            }
+
+            /// <summary>
+            /// Strings the less.
+            /// </summary>
+            /// <param name="a">a.</param>
+            /// <param name="b">The b.</param>
+            /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+            static bool StrLess(T? a, T? b)
+            {
+                var stra = a?.ToString();
+                var strb = b?.ToString();
+
+                if (stra == null && strb == null)
+                    return false;
+
+                if (stra == null)
+                    return true;
+                else if (strb == null)
+                    return false;
+                return stra.CompareTo(strb) < 0;
             }
             #endregion
 
@@ -444,12 +480,12 @@ namespace CQRS.Common
             /// <param name="right">The right.</param>
             /// <param name="criteria">The criteria.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            public static bool Compare(T left, T right, Criteria criteria)
+            public static bool Compare(T? left, T? right, Criteria criteria)
             {
                 int val = (int)criteria;
                 int id = (val < 0) ? -val - 1 : val;
 
-                if (id <= 12)
+                if (id <= max)
                 {
                     if (ctasks[id] == 0) { CreateOperator(criteria, id); }
                     if (ctasks[id] == Status.Supported)
@@ -480,17 +516,82 @@ namespace CQRS.Common
             /// <param name="value1">The value1.</param>
             /// <param name="value2">The value2.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            public static bool CompareRange(T left, MultCriteria criteria, T value1, T value2)
+            public static bool CompareRange(T? left, MultCriteria criteria, params T?[] values) =>
+                CompareRange(left, values, criteria);
+
+            /// <summary>
+            /// Compares the range.
+            /// </summary>
+            /// <param name="left">The left.</param>
+            /// <param name="criteria">The criteria.</param>
+            /// <param name="value1">The value1.</param>
+            /// <param name="value2">The value2.</param>
+            /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+            public static bool CompareRange(T? left, MultCriteria criteria, params object?[] values) =>
+                CompareRange(left, values, criteria);
+
+            /// <summary>
+            /// Compares the range.
+            /// </summary>
+            /// <param name="left">The left.</param>
+            /// <param name="criteria">The criteria.</param>
+            /// <param name="value1">The value1.</param>
+            /// <param name="value2">The value2.</param>
+            /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+            public static bool CompareRange(T? left, IReadOnlyList<T?> values, MultCriteria criteria)
             {
-                if (criteria == MultCriteria.Between)
+                if (values == null || values.Count == 0) return false;
+
+                switch (criteria)
                 {
-                    return Compare(left, value1, Criteria.NotLessThan) &&
-                        Compare(left, value2, Criteria.NotGreaterThan);
-                }
-                else if (criteria == MultCriteria.NotBetween)
-                {
-                    return Compare(left, value1, Criteria.LessThan) &&
-                        Compare(left, value2, Criteria.GreaterThan);
+                    case MultCriteria.Between:
+                        if (values.Count == 1)
+                            return Compare(left, values[0], Criteria.NotLessThan);
+
+                        for (int i = 1; i < values.Count; i += 2)
+                        {
+                            var value1 = values[i - 1];
+                            var value2 = values[i];
+                            if (Compare(left, value1, Criteria.NotLessThan) && Compare(left, value2, Criteria.NotGreaterThan))
+                                return true;
+                        }
+                        return false;
+                    case MultCriteria.NotBetween:
+                        if (values.Count == 1)
+                            return Compare(left, values[0], Criteria.LessThan);
+
+                        for (int i = 1; i < values.Count; i += 2)
+                        {
+                            var value1 = values[i - 1];
+                            var value2 = values[i];
+                            if (Compare(left, value1, Criteria.LessThan) || Compare(left, value2, Criteria.GreaterThan))
+                                return true;
+                        }
+                        return false;
+                    case MultCriteria.In:
+                        if (values.Count == 1)
+                            return Compare(left, values[0], Criteria.Equal);
+
+                        for (int i = 0; i < values.Count; i += 1)
+                        {
+                            var value = values[i];
+                            if (Compare(left, value, Criteria.Equal))
+                                return true;
+                        }
+                        return false;
+                    case MultCriteria.NotIn:
+                        if (values.Count == 1)
+                            return Compare(left, values[0], Criteria.NotEqual);
+
+                        for (int i = 0; i < values.Count; i += 1)
+                        {
+                            var value = values[i];
+                            if (Compare(left, value, Criteria.Equal))
+                                return false;
+                        }
+                        return true;
+                    default:
+                        break;
                 }
                 return false;
             }
@@ -503,17 +604,60 @@ namespace CQRS.Common
             /// <param name="value1">The value1.</param>
             /// <param name="value2">The value2.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            public static bool CompareRange(T left, MultCriteria criteria, object value1, object value2)
+            public static bool CompareRange(T? left, IReadOnlyList<object?>? values, MultCriteria criteria)
             {
-                if (criteria == MultCriteria.Between)
+                if (values == null || values.Count == 0) return false;
+
+                switch (criteria)
                 {
-                    return Compare(left, value1, Criteria.NotLessThan) &&
-                        Compare(left, value2, Criteria.NotGreaterThan);
-                }
-                else if (criteria == MultCriteria.NotBetween)
-                {
-                    return Compare(left, value1, Criteria.LessThan) &&
-                        Compare(left, value2, Criteria.GreaterThan);
+                    case MultCriteria.Between:
+                        if (values.Count == 1)
+                            return Compare(left, values[0], Criteria.NotLessThan);
+
+                        for (int i = 1; i < values.Count; i += 2)
+                        {
+                            var value1 = values[i - 1];
+                            var value2 = values[i];
+                            if (Compare(left, value1, Criteria.NotLessThan) && Compare(left, value2, Criteria.NotGreaterThan))
+                                return true;
+                        }
+                        return false;
+                    case MultCriteria.NotBetween:
+                        if (values.Count == 1)
+                            return Compare(left, values[0], Criteria.LessThan);
+
+                        for (int i = 1; i < values.Count; i += 2)
+                        {
+                            var value1 = values[i - 1];
+                            var value2 = values[i];
+                            if (Compare(left, value1, Criteria.LessThan) || Compare(left, value2, Criteria.GreaterThan))
+                                return true;
+                        }
+                        return false;
+                    case MultCriteria.In:
+                        if (values.Count == 1)
+                            return Compare(left, values[0], Criteria.Equal);
+
+                        for (int i = 0; i < values.Count; i += 1)
+                        {
+                            var value = values[i];
+                            if (Compare(left, value, Criteria.Equal))
+                                return true;
+                        }
+                        return false;
+                    case MultCriteria.NotIn:
+                        if (values.Count == 1)
+                            return Compare(left, values[0], Criteria.NotEqual);
+
+                        for (int i = 0; i < values.Count; i += 1)
+                        {
+                            var value = values[i];
+                            if (Compare(left, value, Criteria.Equal))
+                                return false;
+                        }
+                        return true;
+                    default:
+                        break;
                 }
                 return false;
             }
@@ -524,7 +668,7 @@ namespace CQRS.Common
             /// <param name="left">The left.</param>
             /// <param name="right">The right.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            public static bool Compare(T left, T right)
+            public static bool Compare(T? left, T? right)
             {
                 return Compare(left, right, Criteria.Equal);
             }
@@ -536,40 +680,53 @@ namespace CQRS.Common
             /// <param name="right">The right.</param>
             /// <param name="criteria">The criteria.</param>
             /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-            public static bool Compare(T left, object right, Criteria criteria)
+            public static bool Compare(T? left, object? right, Criteria criteria)
             {
-                if (right != null)
+                if (right == null)
+                    return false;
+                switch (criteria)
                 {
-                    switch (criteria)
-                    {
-                        case Criteria.Occurs:
-                        case Criteria.BeginsWith:
-                        case Criteria.EndsWith:
-                        case Criteria.OccursNoCase:
-                        case Criteria.BeginsWithNoCase:
-                        case Criteria.EndsWithNoCase:
-                        case Criteria.StringEqual:
-                        case Criteria.StringEqualNoCase:
-                        case Criteria.StringNumGreaterThan:
-                        case Criteria.StringNumLessThan:
-                        case Criteria.NotOccurs:
-                        case Criteria.NotBeginsWith:
-                        case Criteria.NotEndsWith:
-                        case Criteria.NotOccursNoCase:
-                        case Criteria.NotBeginsWithNoCase:
-                        case Criteria.NotEndsWithNoCase:
-                        case Criteria.NotStrEqual:
-                        case Criteria.NotStrEqualNoCase:
-                        case Criteria.NotStringGreaterThan:
-                        case Criteria.NotStringLessThan:
-                            return Operator<string>.Compare(left.ToString(), right.ToString(), criteria);
-                        default:
-                            if(right is T)
-                            {
-                                return Compare(left, (T)right, criteria);
-                            }
-                            break;
-                    }
+                    case Criteria.Between:
+                    case Criteria.NotBetween:
+                    case Criteria.In:
+                    case Criteria.NotIn:
+                        if (right is IReadOnlyList<T?>)
+                            return CompareRange(left, (IReadOnlyList<T?>)right,(MultCriteria)criteria);
+                        if(right is IReadOnlyList<object?>)
+                            return CompareRange(left, (IReadOnlyList<object?>)right, (MultCriteria)criteria);
+                        return CompareRange(left, (MultCriteria)criteria, right);
+                    default:
+                        break;
+                }
+                switch (criteria)
+                {
+                    case Criteria.Occurs:
+                    case Criteria.BeginsWith:
+                    case Criteria.EndsWith:
+                    case Criteria.OccursNoCase:
+                    case Criteria.BeginsWithNoCase:
+                    case Criteria.EndsWithNoCase:
+                    case Criteria.StringEqual:
+                    case Criteria.StringEqualNoCase:
+                    case Criteria.StringNumGreaterThan:
+                    case Criteria.StringNumLessThan:
+                    case Criteria.NotOccurs:
+                    case Criteria.NotBeginsWith:
+                    case Criteria.NotEndsWith:
+                    case Criteria.NotOccursNoCase:
+                    case Criteria.NotBeginsWithNoCase:
+                    case Criteria.NotEndsWithNoCase:
+                    case Criteria.NotStrEqual:
+                    case Criteria.NotStrEqualNoCase:
+                    case Criteria.NotStringGreaterThan:
+                    case Criteria.NotStringLessThan:
+                    case Criteria.StringGreaterThan:
+                    case Criteria.StringLessThan:
+                        return Operator<string>.Compare(left?.ToString(), right.ToString(), criteria);
+                    default:
+                        if (right is T)
+                            return Compare(left, (T?)right, criteria);
+                        break;
                 }
                 return false;
             }
@@ -592,7 +749,7 @@ namespace CQRS.Common
                 /// <param name="x">The first object to compare.</param>
                 /// <param name="y">The second object to compare.</param>
                 /// <returns>A signed integer that indicates the relative values of <paramref name="x" /> and <paramref name="y" />, as shown in the following table.Value Meaning Less than zero<paramref name="x" /> is less than <paramref name="y" />.Zero<paramref name="x" /> equals <paramref name="y" />.Greater than zero<paramref name="x" /> is greater than <paramref name="y" />.</returns>
-                int IComparer<string>.Compare(string x, string y)
+                int IComparer<string>.Compare(string? x, string? y)
                 {
                     return Compare(x, y);
                 }
@@ -603,7 +760,7 @@ namespace CQRS.Common
                 /// <param name="x">The first object to compare.</param>
                 /// <param name="y">The second object to compare.</param>
                 /// <returns>A signed integer that indicates the relative values of <paramref name="x" /> and <paramref name="y" />, as shown in the following table.Value Meaning Less than zero<paramref name="x" /> is less than <paramref name="y" />.Zero<paramref name="x" /> equals <paramref name="y" />.Greater than zero<paramref name="x" /> is greater than <paramref name="y" />.</returns>
-                public static int Compare(string x, string y)
+                public static int Compare(string? x, string? y)
                 {
                     //get rid of special cases
                     if ((x == null) && (y == null)) return 0;

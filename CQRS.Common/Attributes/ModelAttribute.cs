@@ -10,7 +10,7 @@ namespace CQRS.Common.Attributes
     /// <summary>
     /// Provides various options for a model to represent itself through Web API. 
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class| AttributeTargets.Interface, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class| AttributeTargets.Interface | AttributeTargets.Struct, AllowMultiple = false)]
     public class ModelAttribute : Attribute
     {
         #region CONSTRUCTORS

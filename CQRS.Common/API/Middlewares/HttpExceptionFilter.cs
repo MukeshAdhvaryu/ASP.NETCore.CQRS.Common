@@ -14,7 +14,7 @@ using CQRS.Common.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace CQRS.Common.Minimal.API.Middlewares
+namespace CQRS.Common.API.Middlewares
 {
     public class HttpExceptionFilter : IExceptionFilter
     {

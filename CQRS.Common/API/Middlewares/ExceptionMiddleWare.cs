@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace CQRS.Common.Minimal.API.Middlewares
+namespace CQRS.Common.API.Middlewares
 {
     public class HttpExceptionMiddleWare : IMiddleware
     {

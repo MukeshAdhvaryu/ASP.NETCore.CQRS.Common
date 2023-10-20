@@ -8,7 +8,12 @@ using CQRS.Common.Attributes;
 using CQRS.Common.Exceptions;
 using CQRS.Common.Interfaces;
 using CQRS.Common.Models;
+
+//-:cnd:noEmit
+#if MODEL_SEARCHABLE
 using CQRS.Common.Parameters;
+#endif
+//+:cnd:noEmit
 
 namespace CQRS.Common
 {
@@ -22,7 +27,7 @@ namespace CQRS.Common
     public abstract class Query<TOutDTO, TModel> : IQuery<TOutDTO, TModel>
         #region TYPE CONSTRAINTS
         where TModel : class, ISelfModel<TModel>, new()
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         #endregion
     {
         #region VARIABLES
@@ -119,17 +124,44 @@ namespace CQRS.Common
         #region FIND (parameters, conditionJoin = 0)
         //-:cnd:noEmit
 #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
-        public virtual Task<TOutDTO?> Find(IEnumerable<SearchParameter>? parameters, AndOr conditionJoin = 0)
+        public virtual Task<TOutDTO?> Find<T>(AndOr conditionJoin, params T?[]? parameters)
+            where T : ISearchParameter
         {
-            if (parameters == null)
-                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
+            if (parameters == null || parameters.Length == 0)
+                throw DummyModel.GetModelException(ExceptionType.NoParametersSupplied);
 
             if (GetModelCount() == 0)
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFound);
 
+
             var items = GetItems();
 
             Predicate<TModel> predicate;
+
+            if (parameters.Length == 1)
+            {
+                var parameter = parameters[0];
+
+                if (parameter == null)
+                    throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
+
+                if (string.IsNullOrEmpty(parameter.Name))
+                    throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied, "Missing Name!");
+
+                predicate = (m) =>
+                {
+                    if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                        return false;
+
+                    var currentValue = m[parameter.Name];
+                    if (!Operations.Compare(currentValue, parameter.Criteria, value))
+                        return false;
+
+                    return true;
+                };
+
+                goto EXIT;
+            }
 
             switch (conditionJoin)
             {
@@ -137,13 +169,15 @@ namespace CQRS.Common
                 default:
                     predicate = (m) =>
                     {
-                        IMatch match = m;
-
-                        foreach (var key in parameters)
+                        foreach (var parameter in parameters)
                         {
-                            if (key == null)
+                            if (parameter == null || string.IsNullOrEmpty(parameter.Name))
                                 continue;
-                            if (!match.IsMatch(key))
+                            if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                                return false;
+
+                            var currentValue = m[parameter.Name];
+                            if (!Operations.Compare(currentValue, parameter.Criteria, value))
                                 return false;
                         }
                         return true;
@@ -152,56 +186,25 @@ namespace CQRS.Common
                 case AndOr.OR:
                     predicate = (m) =>
                     {
-                        IMatch match = m;
                         bool result = false;
-                        foreach (var key in parameters)
+                        foreach (var parameter in parameters)
                         {
-                            if (key == null)
+                            if (parameter == null || string.IsNullOrEmpty(parameter.Name))
                                 continue;
-                            if (match.IsMatch(key))
-                            {
-                                result = true;
-                            }
+                            if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                                return false;
+
+                            var currentValue = m[parameter.Name];
+                            if (Operations.Compare(currentValue, parameter.Criteria, value))
+                                return true;
                         }
                         return result;
                     };
                     break;
             }
+
+            EXIT:
             return Task.FromResult(ToDTO(items.FirstOrDefault((m) => predicate(m))));
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND (parameter)
-        //-:cnd:noEmit
-#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
-        public virtual Task<TOutDTO?> Find(SearchParameter? parameter)
-        {
-            if (parameter == null)
-                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
-
-            if (GetModelCount() == 0)
-                throw DummyModel.GetModelException(ExceptionType.NoModelsFound);
-
-            return Task.FromResult(ToDTO((GetItems().FirstOrDefault(m => m.IsMatch(parameter)))));
-        }
-#endif
-        //+:cnd:noEmit
-        #endregion
-
-        #region FIND ALL (parameter)
-        //-:cnd:noEmit
-#if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
-        public virtual Task<IEnumerable<TOutDTO>?> FindAll(SearchParameter? parameter)
-        {
-            if (parameter == null)
-                throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
-
-            if (GetModelCount() == 0)
-                throw DummyModel.GetModelException(ExceptionType.NoModelsFound);
-
-            return Task.FromResult(ToDTO(GetItems().Where(m => m.IsMatch(parameter))));
         }
 #endif
         //+:cnd:noEmit
@@ -210,16 +213,41 @@ namespace CQRS.Common
         #region FIND ALL (parameters)
         //-:cnd:noEmit
 #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
-        public virtual Task<IEnumerable<TOutDTO>?> FindAll(IEnumerable<SearchParameter>? parameters, AndOr conditionJoin)
+        public virtual Task<IEnumerable<TOutDTO>?> FindAll<T>(AndOr conditionJoin, params T?[]? parameters)
+            where T : ISearchParameter
         {
             if (parameters == null)
                 throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
-           
+
             if (GetModelCount() == 0)
                 throw DummyModel.GetModelException(ExceptionType.NoModelsFound);
 
-
             Predicate<TModel> predicate;
+
+            if (parameters.Length == 1)
+            {
+                var parameter = parameters[0];
+
+                if (parameter == null)
+                    throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied);
+
+                if (string.IsNullOrEmpty(parameter.Name))
+                    throw DummyModel.GetModelException(ExceptionType.NoParameterSupplied, "Missing Name!");
+
+                predicate = (m) =>
+                {
+                    if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                        return false;
+
+                    var currentValue = m[parameter.Name];
+                    if (!Operations.Compare(currentValue, parameter.Criteria, value))
+                        return false;
+
+                    return true;
+                };
+
+                goto EXIT;
+            }
 
             switch (conditionJoin)
             {
@@ -227,13 +255,15 @@ namespace CQRS.Common
                 default:
                     predicate = (m) =>
                     {
-                        IMatch match = m;
-
-                        foreach (var key in parameters)
+                        foreach (var parameter in parameters)
                         {
-                            if (key == null)
+                            if (parameter == null || string.IsNullOrEmpty(parameter.Name))
                                 continue;
-                            if (!match.IsMatch(key))
+                            if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                                return false;
+
+                            var currentValue = m[parameter.Name];
+                            if (!Operations.Compare(currentValue, parameter.Criteria, value))
                                 return false;
                         }
                         return true;
@@ -242,22 +272,24 @@ namespace CQRS.Common
                 case AndOr.OR:
                     predicate = (m) =>
                     {
-                        IMatch match = m;
                         bool result = false;
-                        foreach (var key in parameters)
+                        foreach (var parameter in parameters)
                         {
-                            if (key == null)
+                            if (parameter == null || string.IsNullOrEmpty(parameter.Name))
                                 continue;
-                            if (match.IsMatch(key))
-                            {
-                                result = true;
-                            }
+                            if (!DummyModel.Parse(parameter.Name, parameter.Value, out object? value, false, parameter.Criteria))
+                                return false;
+
+                            var currentValue = m[parameter.Name];
+                            if (Operations.Compare(currentValue, parameter.Criteria, value))
+                                return true;
                         }
                         return result;
                     };
                     break;
             }
 
+            EXIT:
             return Task.FromResult(ToDTO(GetItems().Where((m) => predicate(m))));
         }
 #endif

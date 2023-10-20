@@ -30,7 +30,7 @@ namespace CQRS.Common.Contexts
         /// <returns>An Instance implementing ICommand<TOutDTO, TModel, TID></returns>
         ICommand<TOutDTO, TModel, TID> CreateCommand<TOutDTO, TModel, TID>(bool initialzeData = true, ICollection<TModel>? source = null)
             #region TYPE CONSTRINTS
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -65,7 +65,7 @@ namespace CQRS.Common.Contexts
 #endif
 //+:cnd:noEmit
             , new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             #endregion
             ;
 
@@ -80,7 +80,7 @@ namespace CQRS.Common.Contexts
         /// <returns>An Instance implementing IQuery<TOutDTO, TModel, TID></returns>
         IQuery<TOutDTO, TModel, TID> CreateQuery<TOutDTO, TModel, TID>(bool initialzeData = false, ICollection<TModel>? source = null)
             #region TYPE CONSTRINTS
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel> 
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)

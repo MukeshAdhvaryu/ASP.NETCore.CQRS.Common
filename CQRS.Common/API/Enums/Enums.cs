@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CQRS.Common.Minimal.API.Enums
+namespace CQRS.Common.API.Enums
 {
     
 }

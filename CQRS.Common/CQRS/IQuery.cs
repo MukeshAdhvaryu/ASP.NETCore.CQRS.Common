@@ -27,7 +27,7 @@ namespace CQRS.Common
         //+:cnd:noEmit
         #region TYPE CONSTRAINTS
         where TModel : ISelfModel<TModel>
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         #endregion
     { }
     #endregion
@@ -42,7 +42,7 @@ namespace CQRS.Common
     public interface IQuery<TOutDTO, TModel, TID> : IQuery<TOutDTO, TModel>,
         IFindByID<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel> 
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)

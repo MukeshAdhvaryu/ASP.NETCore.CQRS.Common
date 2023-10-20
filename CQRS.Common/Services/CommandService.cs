@@ -18,7 +18,7 @@ namespace CQRS.Common.Services
     /// <typeparam name="TContext">Instance which implements IModelContext.</typeparam>
     public partial class CommandService<TOutDTO, TModel, TID, TInDTO, TContext> : Contract, ICommandContract<TOutDTO, TModel, TID>  
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -27,7 +27,7 @@ namespace CQRS.Common.Services
         //+:cnd:noEmit
         new()
         where TID : struct
-        where TInDTO : class, IModel, new()
+        where TInDTO : IModel, new()
         where TContext : IModelContext
         #endregion
     {

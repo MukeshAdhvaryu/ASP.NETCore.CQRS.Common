@@ -28,13 +28,6 @@ namespace CQRS.Common.Models
             return Guid.NewGuid();
         }
         #endregion
-
-        #region TRY PARSE ID
-        protected override bool TryParseID(object value, out Guid newID)
-        {
-            return Guid.TryParse(value.ToString(), out newID);
-        }
-        #endregion
     }
     #endregion
 }

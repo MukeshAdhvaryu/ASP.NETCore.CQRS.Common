@@ -24,7 +24,7 @@ namespace CQRS.Common.Contexts
 
         protected virtual ICommand<TOutDTO, TModel, TID> newCommandObject<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
             #region TYPE CONSTRINTS
-            where TOutDTO :  class, IModel, new()
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel> 
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -50,7 +50,7 @@ namespace CQRS.Common.Contexts
         }
         protected virtual IQuery<TOutDTO, TModel> newQueryObject<TOutDTO, TModel>(bool initialzeData, ICollection<TModel>? source)
             #region TYPE CONSTRINTS
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TModel> 
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -70,7 +70,7 @@ namespace CQRS.Common.Contexts
 
         protected virtual IQuery<TOutDTO, TModel, TID> newQueryObject<TOutDTO, TModel, TID>(bool initialzeData, ICollection<TModel>? source)
             #region TYPE CONSTRINTS
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel> 
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -102,7 +102,7 @@ namespace CQRS.Common.Contexts
 #if MODEL_APPENDABLE || MODEL_UPDATABLE || MODEL_DELETABLE
         class CommandObject<TOutDTO, TModel, TID> : Command<TOutDTO, TModel, TID>
             #region TYPE CONSTRINTS
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -181,7 +181,7 @@ namespace CQRS.Common.Contexts
 #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
         class QueryObject<TOutDTO, TModel, TID> : Query<TOutDTO, TModel>, IQuery<TOutDTO, TModel, TID>
             #region TYPE CONSTRINTS
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TModel : class, ISelfModel<TID, TModel>
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -238,7 +238,7 @@ namespace CQRS.Common.Contexts
 
         class QueryObject<TOutDTO, TModel> : Query<TOutDTO, TModel>
             #region TYPE CONSTRINTS
-    where TOutDTO : class, IModel, new()
+    where TOutDTO : IModel, new()
     where TModel : class, ISelfModel<TModel>
             //-:cnd:noEmit
 #if (!MODEL_USEDTO)

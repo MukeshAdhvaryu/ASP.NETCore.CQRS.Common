@@ -5,7 +5,11 @@
 
 using CQRS.Common.Exceptions;
 using CQRS.Common.Models;
+//-:cnd:noEmit
+#if MODEL_SEARCHABLE
 using CQRS.Common.Parameters;
+#endif
+//+:cnd:noEmit
 
 namespace CQRS.Common.Interfaces
 {
@@ -21,25 +25,6 @@ namespace CQRS.Common.Interfaces
         /// <returns></returns>
         int GetModelCount();
     }
-    #endregion
-
-    #region IMatch
-//-:cnd:noEmit
-#if MODEL_SEARCHABLE
-    /// <summary>
-    /// Reprents an object which checks if certqain value exists.
-    /// </summary>
-    public interface IMatch
-    {
-        /// <summary>
-        /// Finds whether the given value matches the current value of property found by specified property name.
-        /// </summary>
-        /// <param name="searchParameter">Search parameter to use to match records in this object.</param>
-        /// <returns>True if values match, otherwise false.</returns>
-        bool IsMatch(SearchParameter? searchParameter);
-    }
-        //+:cnd:noEmit
-#endif  
     #endregion
 
     #region IModifiable
@@ -70,8 +55,8 @@ namespace CQRS.Common.Interfaces
         /// Copies model data from the given model parameter.
         /// </summary>
         /// <param name="model">Model to copy data from.</param>
-        /// <returns>True if the copy operation is successful; otherwise, false.</returns>
-        Task<bool> CopyFrom(IModel model);
+        /// <returns>A tuple containing result in terms of sucess and a message detailed one if the operation failed or short one if successful.</returns>
+        Task<Tuple<bool, string>> CopyFrom(IModel model);
     }
     #endregion
 
@@ -80,19 +65,19 @@ namespace CQRS.Common.Interfaces
     /// This interface represents an object that offers parameter parsing capability.
     /// Provided, the given property exist as one of its members.
     /// </summary>
-    internal interface IExParamParser
+    internal partial interface IExParamParser
     {
         /// <summary>
         /// Parses the specified parameter and if possible emits the value compitible with
         /// the property this object posseses.
         /// </summary>
-        /// <param name="parameter">Parameter to parse.</param>
-        /// <param name="currentValue">Current value exists for the given property in this object.</param>
+        /// <param name="propertyName">Name of the property which to parse the value against.</param>
+        /// <param name="propertyValue">Value to be parsed to obtain compitible value.</param>
         /// <param name="parsedValue">If succesful, a compitible value parsed using supplied value from parameter.</param>
-        /// <param name="updateValueIfParsed">If succesful, replace the current value with the compitible parsed value.</param>
+        /// <param name="updateValueIfParsed">If succesful, replaces the current value with the compitible parsed value.</param>
         /// <returns>Result Message with Status of the parse operation.</returns>
         /// <param name="criteria">Criteria to be used when parsing value.</param>
-        Message Parse(ObjParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false, Criteria criteria = 0);
+        bool Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed = false, Criteria criteria = 0);
     }
     #endregion
 
@@ -115,7 +100,7 @@ namespace CQRS.Common.Interfaces
 #endif
     //+:cnd:noEmit
     #endregion
-    
+
     #region IExModelExceptionSupplier
     /// <summary>
     /// This interface represents an object which supplies an appropriate exception for a failure in a specified method.
@@ -123,13 +108,12 @@ namespace CQRS.Common.Interfaces
     internal interface IExModelExceptionSupplier
     {
         /// <summary>
-        /// Supplies an appropriate exception for a failure in a specified method.
+        /// Supplies an appropriate exception message for a failure in a specified method.
         /// </summary>
         /// <param name="exceptionType">Type of exception to get.</param>
         /// <param name="additionalInfo">Additional information to aid the task of exception supply.</param>
-        /// <param name="innerException">Inner exception which is already thrown.</param>
-        /// <returns>Instance of SpecialException class.</returns>
-        ModelException GetModelException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null);
+        /// <returns>Exception message.</returns>
+        string GetModelExceptionMessage(ExceptionType exceptionType, string? additionalInfo = null);
     }
     #endregion
 
@@ -137,7 +121,7 @@ namespace CQRS.Common.Interfaces
     /// <summary>
     /// Represents an object which offers the first model with in its internal collection.
     /// </summary>
-    public interface IFirstModel  
+    public interface IFirstModel
     {
         IModel? GetFirstModel();
     }
@@ -160,7 +144,7 @@ namespace CQRS.Common.Interfaces
     //-:cnd:noEmit
 #if !MODEL_NONREADABLE || !MODEL_NONQUERYABLE
     public interface IFetch<TOutDTO, TModel>
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : IModel
     {
         /// <summary>
@@ -190,7 +174,7 @@ namespace CQRS.Common.Interfaces
     //-:cnd:noEmit
 #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE) && MODEL_SEARCHABLE
     public interface ISearch<TOutDTO, TModel>
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : IModel
     {
         /// <summary>
@@ -199,21 +183,8 @@ namespace CQRS.Common.Interfaces
         /// <param name="parameters">Parameters to be used to find the model.</param>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        Task<TOutDTO?> Find(IEnumerable<SearchParameter>? parameters, AndOr conditionJoin = 0);
-
-        /// <summary>
-        /// Finds a model based on given paramter.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used to find the model.</param>
-        /// <returns>Task with result of type TModel.</returns>
-        Task<TOutDTO?> Find(SearchParameter? parameter);
-
-        /// <summary>
-        /// Finds all models matched based on given paramter.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used to find the model.</param>
-        /// <returns>Task with result of type TModel.</returns>
-        Task<IEnumerable<TOutDTO>?> FindAll(SearchParameter? parameter);
+        Task<TOutDTO?> Find<T>(AndOr conditionJoin, params T?[]? parameters)
+            where T : ISearchParameter;
 
         /// <summary>
         /// Finds all models matched based on given parameters.
@@ -222,40 +193,8 @@ namespace CQRS.Common.Interfaces
         /// <returns>Task with result of collection of type TModel.</returns>
         /// <param name="conditionJoin">Option from AndOr enum to join search conditions.</param>
         /// <returns>Task with result of collection of type TModel.</returns>
-        Task<IEnumerable<TOutDTO>?> FindAll(IEnumerable<SearchParameter>? parameters, AndOr conditionJoin = 0);
-    }
-#endif
-    //+:cnd:noEmit
-    #endregion
-
-    #region IDeletable<TOutDTO, TModel, TID>
-    //-:cnd:noEmit
-#if MODEL_DELETABLE
-    /// <summary>
-    /// This interface represents an object that allows deleting a single model with a specified ID.
-    /// </summary>
-    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
-    /// <typeparam name="TModel">Model of your choice.</typeparam>
-    /// <typeparam name="TID">Primary key type of the model.</typeparam>
-    public interface IDeleteable<TOutDTO, TModel, TID>
-        #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
-        where TModel : ISelfModel<TID, TModel>,
-        //-:cnd:noEmit
-#if (!MODEL_USEDTO)
-        TOutDTO,
-#endif
-        //+:cnd:noEmit
-        new()
-        where TID : struct
-        #endregion
-    {
-        /// <summary>
-        /// Deletes the model with the specified ID.
-        /// </summary>
-        /// <param name="id">ID of the model to delete.</param>
-        /// <returns></returns>
-        Task<TOutDTO?> Delete(TID id);
+        Task<IEnumerable<TOutDTO>?> FindAll<T>(AndOr conditionJoin, params T?[]? parameters)
+            where T : ISearchParameter;
     }
 #endif
     //+:cnd:noEmit
@@ -273,7 +212,7 @@ namespace CQRS.Common.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IAppendable<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -294,6 +233,18 @@ namespace CQRS.Common.Interfaces
         /// </param>
         /// <returns>Model that is added.</returns>
         Task<TOutDTO?> Add(IModel? model);
+
+        //-:cnd:noEmit
+#if MODEL_APPENDBULK
+        /// <summary>
+        /// Adds new models based on an enumerable of models specified.
+        /// </summary>
+        /// <param name="models">An enumerable of models to add to the model collection.</param>
+        /// <returns>Collection of models which are successfully added and a message for those which are not.</returns>
+        Task<Tuple<IEnumerable<TOutDTO?>?, string>> AddRange<T>(IEnumerable<T?>? models)
+            where T: IModel;
+#endif
+        //+:cnd:noEmit
     }
 #endif
     //+:cnd:noEmit
@@ -310,7 +261,7 @@ namespace CQRS.Common.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IUpdatable<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -331,6 +282,64 @@ namespace CQRS.Common.Interfaces
         /// </param>
         /// <returns></returns>
         Task<TOutDTO?> Update(TID id, IModel? model);
+
+        //-:cnd:noEmit
+#if MODEL_UPDATEBULK
+        /// <summary>
+        /// Updates models based on an enumerable of models specified.
+        /// </summary>
+        /// <param name="IDs">An enumerable of ID to be used to update models matching those IDs from the model collection.</param>
+        /// <param name="models">An enumerable of models to update the model collection.</param>
+        /// <returns>Collection of models which are successfully updated and a message for those which are not.</returns>
+        Task<Tuple<IEnumerable<TOutDTO>?, string>> UpdateRange<T>(IEnumerable<TID>? IDs, IEnumerable<T?>? models)
+            where T: IModel;
+#endif
+        //+:cnd:noEmit
+
+    }
+#endif
+    //+:cnd:noEmit
+    #endregion
+
+    #region IDeletable<TOutDTO, TModel, TID>
+    //-:cnd:noEmit
+#if MODEL_DELETABLE
+    /// <summary>
+    /// This interface represents an object that allows deleting a single model with a specified ID.
+    /// </summary>
+    /// <typeparam name="TOutDTO">Interface representing the model.</typeparam>
+    /// <typeparam name="TModel">Model of your choice.</typeparam>
+    /// <typeparam name="TID">Primary key type of the model.</typeparam>
+    public interface IDeleteable<TOutDTO, TModel, TID>
+        #region TYPE CONSTRINTS
+        where TOutDTO : IModel, new()
+        where TModel : ISelfModel<TID, TModel>,
+        //-:cnd:noEmit
+#if (!MODEL_USEDTO)
+        TOutDTO,
+#endif
+        //+:cnd:noEmit
+        new()
+        where TID : struct
+        #endregion
+    {
+        /// <summary>
+        /// Deletes the model with the specified ID.
+        /// </summary>
+        /// <param name="id">ID of the model to delete.</param>
+        /// <returns></returns>
+        Task<TOutDTO?> Delete(TID id);
+
+        //-:cnd:noEmit
+#if MODEL_DELETEBULK
+        /// <summary>
+        /// Deletes new models based on an enumerable of IDs specified.
+        /// </summary>
+        /// <param name="IDs">An enumerable of ID to be used to delete models matching those IDs from the model collection.</param>
+        /// <returns>Collection of models which are successfully deleted and a message for those which are not.</returns>
+        Task<Tuple<IEnumerable<TOutDTO>?, string>> DeleteRange(IEnumerable<TID>? IDs);
+#endif
+        //+:cnd:noEmit
     }
 #endif
     //+:cnd:noEmit
@@ -347,7 +356,7 @@ namespace CQRS.Common.Interfaces
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     public interface IFindByID<TOutDTO, TModel, TID>
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : ISelfModel<TID, TModel>
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -435,5 +444,30 @@ namespace CQRS.Common.Interfaces
     }
 #endif
     //+:cnd:noEmit
+    #endregion
+
+    #region IParser
+    /// <summary>
+    /// Represents an object which has an ability to parse a query string to a certain type defined as T.
+    /// </summary>
+    /// <typeparam name="T">Type of result value.</typeparam>
+    public interface ISelfParser<T> 
+    {
+        /// <summary>
+        /// Parse the given query string to an instance of type T.
+        /// Returns parsed value.
+        /// </summary>
+        /// <param name="json">Query to be parsed as T.</param>
+        /// <returns>An instance of type T.</returns>
+        T? Parse(string json);
+    }
+    #endregion
+
+    #region IParser
+    /// <summary>
+    /// Represents an object which surrogates as a model binder.
+    /// </summary>
+    public interface IParser
+    { }
     #endregion
 }

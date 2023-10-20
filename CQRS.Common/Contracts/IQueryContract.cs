@@ -16,7 +16,7 @@ namespace CQRS.Common.Services
     /// <typeparam name="TModel">Model of your choice.</typeparam>
     public interface IQueryContract<TOutDTO, TModel> : IContract, IFirstModel<TModel>
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : ISelfModel<TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -43,7 +43,7 @@ namespace CQRS.Common.Services
     public interface IQueryContract<TOutDTO, TModel, TID> : 
         IQueryContract<TOutDTO, TModel>
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>,
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)

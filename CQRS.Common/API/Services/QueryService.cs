@@ -6,6 +6,12 @@
 #if !TDD  
 //+:cnd:noEmit
 
+using CQRS.Common.Models;
+using CQRS.Common.Parameters;
+using CQRS.Common.Parsers;
+
+using Microsoft.AspNetCore.Mvc;
+
 namespace CQRS.Common.Services
 {
     #region QueryService<TOutDTO, TModel, TContext>
@@ -15,14 +21,19 @@ namespace CQRS.Common.Services
         {
             //-:cnd:noEmit
 #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
-            app.MapGet(GetUrl("GetAll"), [Tags("Query")] async () =>
-            await Query.GetAll(0));
+            app.MapGet(GetUrl("GetAll/{count}"), [Tags("Query")] async (int? count) =>
+            await Query.GetAll(count ?? 0));
 
-            app.MapGet(GetUrl("GetPortion/{count}"), [Tags("Query")] async (int count) => 
-                await Query.GetAll(count));
+            app.MapGet(GetUrl("GetPortion/{startIndex}, {count}"), [Tags("Query")] async (int startIndex, int? count) =>
+            await Query.GetAll(startIndex, count ?? 0));
 
-            app.MapGet(GetUrl("GetPortion/{startIndex}, {count}"), [Tags("Query")] async (int startIndex, int count) => 
-                await Query.GetAll(startIndex, count));
+#if MODEL_SEARCHABLE
+            app.MapGet(GetUrl("Find"), [Tags("Query")] async (Parser<SearchParameter[]> parameters, AndOr? join) =>
+            await Query.Find(join ?? AndOr.OR, parameters.Result));
+
+            app.MapGet(GetUrl("FindAll"), [Tags("Query")] async (Parser<SearchParameter[]> parameters, AndOr? join) =>
+            await Query.FindAll(join ?? AndOr.OR, parameters.Result));
+#endif
 #endif
             //+:cnd:noEmit
         }

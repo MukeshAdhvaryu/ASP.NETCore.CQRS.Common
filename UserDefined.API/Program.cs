@@ -1,12 +1,6 @@
-using UserDefined.Models;
+using CQRS.Common.API;
 
-using UserDefined.Models.Models;
-using CQRS.Common;
-using CQRS.Common.Interfaces;
-using System.Drawing;
-using System.Security.Cryptography;
-using System.Xml.Linq;
-using Microsoft.AspNetCore.Mvc;
+using UserDefined.Models;
 
 //-:cnd:noEmit
 #if MODEL_USEDTO

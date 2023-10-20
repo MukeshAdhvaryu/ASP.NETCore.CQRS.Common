@@ -8,17 +8,18 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 
+using CQRS.Common.API.Middlewares;
 using CQRS.Common.Attributes;
 using CQRS.Common.Contexts;
-using CQRS.Common.Minimal.API;
-using CQRS.Common.Minimal.API.Middlewares;
 using CQRS.Common.Models;
+using CQRS.Common.Parameters;
+using CQRS.Common.Parsers;
 using CQRS.Common.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace CQRS.Common
+namespace CQRS.Common.API
 {
     #region CONFIGURATION
     /// <summary>
@@ -53,26 +54,24 @@ namespace CQRS.Common
 
             mvcBuilder.AddJsonOptions(option =>
             {
-                option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                option.JsonSerializerOptions.AddDefaultOptions();
             });
-
-
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddEndpointsApiExplorer();
 
             //-:cnd:noEmit
 #if MODEL_USESWAGGER
-            services.AddSwaggerGen(opt => {
-                opt.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+            services.AddSwaggerGen(option => {
+                option.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
                     Title = SwaggerDocTitle,
                     Description = SwaggerDocDescription
                 });
 
 
-                opt.SchemaFilter<EnumSchemaFilter>();
-                //opt.OperationFilter<OperationFilter>();
+                option.SchemaFilter<EnumSchemaFilter>();
+                option.OperationFilter<OperationFilter>();
             });
 #endif
             //+:cnd:noEmit
@@ -95,7 +94,7 @@ namespace CQRS.Common
         {
             IsProductionEnvironment = isProductionEnvironment;
             var nativeAction = action;
-            CONFIGURE:
+
             var mvcBuilder = MvcServiceCollectionExtensions.AddMvc(services);
 
             mvcBuilder = services.AddControllers(option =>
@@ -110,15 +109,15 @@ namespace CQRS.Common
 
             //-:cnd:noEmit
 #if MODEL_USESWAGGER
-            services.AddSwaggerGen(opt => {
-                opt.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+            services.AddSwaggerGen(option => {
+                option.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
                     Title = SwaggerDocTitle,
                     Description = SwaggerDocDescription
                 });
 
 
-                opt.SchemaFilter<EnumSchemaFilter>();
+                option.SchemaFilter<EnumSchemaFilter>();
             });
 #endif
             //+:cnd:noEmit
@@ -161,8 +160,8 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
-            where TInDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
+            where TInDTO : IModel, new()
             where TService : CommandService<TOutDTO, TModel, TID, TInDTO, TDBContext>
             where TID : struct
             where TDBContext : DBContext
@@ -210,7 +209,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TService : CommandService<TOutDTO, TModel, TID, TOutDTO, TDBContext>
             where TID : struct
             where TDBContext : DBContext
@@ -238,8 +237,8 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
-            where TInDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
+            where TInDTO : IModel, new()
             where TID : struct
             #endregion
             => AddModel<TOutDTO, TModel, TID, TInDTO, CommandService<TOutDTO, TModel, TID, TInDTO, DBContext>, DBContext>(services, configuration, dbContextOptions);
@@ -264,8 +263,8 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
-            where TInDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
+            where TInDTO : IModel, new()
             #endregion
             => AddModel<TOutDTO, TModel, int, TInDTO>(services, configuration, dbContextOptions);
 
@@ -288,7 +287,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             #endregion
             => AddModel<TOutDTO, TModel, TOutDTO>(services, configuration, dbContextOptions);
 
@@ -335,7 +334,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TService : QueryService<TOutDTO, TModel, TDBContext>
             where TDBContext : DBContext
             #endregion
@@ -380,7 +379,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             #endregion
             => AddQueryModel<TOutDTO, TModel, QueryService<TOutDTO, TModel, DBContext>, DBContext>(services, configuration, dbContextOptions);
 
@@ -429,7 +428,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TService : QueryService<TOutDTO, TModel, TID, TDBContext>
             where TDBContext : DBContext
             where TID: struct
@@ -475,7 +474,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TID : struct
             #endregion
             => AddKeyedQueryModel<TOutDTO, TModel, TID, QueryService<TOutDTO, TModel, TID, DBContext>, DBContext>(services, configuration, dbContextOptions);
@@ -499,7 +498,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             #endregion
             => AddKeyedQueryModel<TOutDTO, TModel, int>(services, configuration, dbContextOptions);
 
@@ -547,8 +546,8 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
-            where TInDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
+            where TInDTO : IModel, new()
             where TService : CommandService<TOutDTO, TModel, TID, TInDTO, TContext> 
             where TID : struct
             where TContext : IModelContext, new()
@@ -594,8 +593,8 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
-            where TInDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
+            where TInDTO : IModel, new()
             where TID : struct
             where TContext : IModelContext, new()
             #endregion
@@ -622,7 +621,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TID : struct
             #endregion
             => AddModelSingleton<TOutDTO, TModel, TID, TOutDTO, ModelContext>(services, configuration, source);
@@ -647,8 +646,8 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
-            where TInDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
+            where TInDTO : IModel, new()
             #endregion
             => AddModelSingleton<TOutDTO, TModel, int, TInDTO>(services, configuration, source);
 
@@ -672,7 +671,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             #endregion
             => AddModelSingleton<TOutDTO, TModel, TOutDTO>(services, configuration, source);
 
@@ -719,7 +718,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TService : QueryService<TOutDTO, TModel, TID, TContext>
             where TID : struct
             where TContext : IModelContext, new()
@@ -765,7 +764,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TID : struct
             where TContext : IModelContext, new()
             #endregion
@@ -792,7 +791,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TID : struct
             #endregion
             => AddKeyedQueryModelSingleton<TOutDTO, TModel, TID, ModelContext>(services, configuration, source);
@@ -817,7 +816,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             #endregion
             => AddKeyedQueryModelSingleton<TOutDTO, TModel, int>(services, configuration, source);
 
@@ -863,7 +862,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TService : QueryService<TOutDTO, TModel, TContext>
             where TContext : IModelContext, new()
             #endregion
@@ -906,7 +905,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             where TContext : IModelContext, new()
             #endregion
             => AddQueryModelSingleton<TOutDTO, TModel, TOutDTO, QueryService<TOutDTO, TModel, TContext>, TContext>(services, configuration, source);
@@ -930,7 +929,7 @@ namespace CQRS.Common
 #endif
             //+:cnd:noEmit
             new()
-            where TOutDTO : class, IModel, new()
+            where TOutDTO : IModel, new()
             #endregion
             => AddQueryModelSingleton<TOutDTO, TModel, ModelContext>(services, configuration, source);
 

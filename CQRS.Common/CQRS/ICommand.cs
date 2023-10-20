@@ -34,7 +34,7 @@ namespace CQRS.Common
 #endif
         //+:cnd:noEmit
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel>
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)
@@ -61,7 +61,7 @@ namespace CQRS.Common
     /// <typeparam name="TID">Primary key type of the model.</typeparam>
     internal interface IExCommand<TOutDTO, TModel, TID> : ICommand<TOutDTO, TModel, TID>, IFirstModel<TModel>
         #region TYPE CONSTRINTS
-        where TOutDTO : class, IModel, new()
+        where TOutDTO : IModel, new()
         where TModel : class, ISelfModel<TID, TModel> 
         //-:cnd:noEmit
 #if (!MODEL_USEDTO)

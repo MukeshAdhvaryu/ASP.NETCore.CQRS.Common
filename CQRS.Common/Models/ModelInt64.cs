@@ -31,12 +31,5 @@ namespace CQRS.Common.Models
             return ++IDCounter;
         }
         #endregion
-
-        #region TRY PARSE ID
-        protected override bool TryParseID(object value, out long newID)
-        {
-            return long.TryParse(value.ToString(), out newID);
-        }
-        #endregion
     }
 }
