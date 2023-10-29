@@ -9,11 +9,10 @@ then anywhere you want to create the template use:
 OR
 ## dotnet new install min
 
-Using a Minimal API template for creating CQRS is a faster and more efficient way.
+Using a Minimal API template for creating a CQRS application is a faster and more efficient way.
 Creating a minimal API by choosing from .NET templates is a standard way to get started. 
 
-### I have not included comments and some of code in this file to keep it short. Actual code has all. 
-### Please rest assured that, I am not a Spaghetti maker!
+### I have not included comments and excluded some of the code in this file to keep it short. Actual code has all. Please rest assured that, I am not a Spaghetti maker!
 
 ## Index
 [WHY?](#WHY)
@@ -62,7 +61,7 @@ We do need something better than that. A template powerful enough to get adapted
 [GoTo Index](#Index)
 
 ## WHAT?
-On one fine day, it dawned upon me that I need to explore a possibility of creating something which addresses the moving part of the minimal API device: Model.
+On one fine day, it dawned upon me that I need to explore a possibility of creating something which addresses the moving part of the minimal API design: Model.
 The goal I set was: to make a model centric project where everything which I will need: 
 a DbContext, a repository, an exception middleware can be defined and controlled at the model level only.
 
@@ -81,11 +80,12 @@ To have or not to have a write-only (command) contract generated dynamically.
 The goal was also to include a common test project to handle all three without the user need to change much except any custom test they want to write.
 It would be an apt thing to do to define custom attributes to map important attributes from all three testing frameworks.
 
-### Support for keyless (query) models was also to be provided (perhaps not at the begining of the project).**
-Keyed models should be flexible enough to use various common keys such as int, long, Guid, enum etc.
+### Support for keyless (query) models was also to be provided.
+
+### Keyed models should be flexible enough to use various common keys such as int, long, Guid, enum etc.
 
 ### To handle under-fetching and over-fetching problems,
-Option was to be provided to use interfaces and DTOs as input argument in POST/PUT and as an output argument in GET calls.**
+Option was to be provided to use DTOs as input argument in POST/PUT and as an output argument in GET calls.
 
 [GoTo Index](#Index)
 
@@ -97,8 +97,8 @@ Minimal API comes with some limitations mainly the following:
 3. Some may consider even using service repository a sin, I am not one of them.
    Using DbContext directly without an abstraction layer can never be a good design.
 
-Without model binding, I am in a fix. Especially, when Swagger does not allow Body support in GET.
-I am using SearchParamter - abody via FindAll method to fetch records matching search criteria.
+Without model binding, We are in a fix. Especially, when Swagger does not allow Body support in GET.
+I am using SearchParamter - a body via FindAll() method to fetch records matching search criteria.
 Thankfully, we have some help there:
 
 For any entity we need model binding we need to have the following method be placed inside the entity:
@@ -107,7 +107,7 @@ For any entity we need model binding we need to have the following method be pla
     {
         //read from the query and generate concrete entity.
     }
-### Problem is: doing it for each entity is an extra work, quite unnecessary since all we need to parse query string using JsonSerializer into a concrete entity.
+### Problem is: doing it for each entity is an extra work, quite unnecessary since all we need is: to parse query string using JsonSerializer into a concrete entity.
 
 Now how do we avoid this necessary evil of re-coding?
 
@@ -120,7 +120,7 @@ Now how do we avoid this necessary evil of re-coding?
         {
             None,
             IsEnumerable = 0x1,
-            IsParseable = 0x2,
+            IsParsable = 0x2,
         }
 
         public readonly T? Result;
@@ -135,7 +135,7 @@ Now how do we avoid this necessary evil of re-coding?
             if (Type.IsAssignableTo(typeof(IEnumerable)))
                 Info |= TypeInfo.IsEnumerable;
             if(Type.IsAssignableTo(typeof(ISelfParser<T>)) && (Type.IsValueType || Type.GetConstructor(Type.EmptyTypes) != null))
-                Info |= TypeInfo.IsParseable;
+                Info |= TypeInfo.IsParsable;
         }
         public Parser(T? result)
         {
@@ -153,7 +153,7 @@ Now how do we avoid this necessary evil of re-coding?
                     json += "]";
             }
             T? result;
-            if ((Info & TypeInfo.IsParseable) == TypeInfo.IsParseable)
+            if ((Info & TypeInfo.IsParsable) == TypeInfo.IsParsable)
             {
                 var parsable = Activator.CreateInstance(Type);
                 if(parsable != null)
@@ -170,7 +170,7 @@ Now how do we avoid this necessary evil of re-coding?
         } 
     }
 
-### Please note that we have not snatched away an opportunity for the given entity to parse json by itself by giving through ISelfParser<T> interface.
+### Please note that we have not snatched away an opportunity for the given entity to parse json by itself by providing it through ISelfParser<T> interface. If, it chooses to implement that.
 
 Then the static class Globals:
 
@@ -190,7 +190,11 @@ Then the static class Globals:
             }
         }
         
-        public static bool IsProductionEnvironment { get => isProductionEnvironment; internal set { isProductionEnvironment = value; } }
+        public static bool IsProductionEnvironment 
+        { 
+           get => isProductionEnvironment;
+           internal set => isProductionEnvironment = value; 
+       }
                 
         public static JsonSerializerOptions AddDefaultOptions(this JsonSerializerOptions JsonSerializerOptions)
         {
@@ -219,7 +223,7 @@ Then the static class Globals:
         
         // other useful methods...        
     }
-### Now consider the follwing methods defined in Command and Query Service classes which are our surrogates in lieu of controllers.
+### Now consider the following methods defined in Command and Query Service classes which are our surrogates in lieu of controllers.
 
 ### Command Service:
 
@@ -261,13 +265,13 @@ Then the static class Globals:
         }
     }
 
-### Do you see the trick? We have wrapped our actual parameters in Parser<> so now we made it sure that: 
-1. We dont get 'No TryParse method found' because Parser<T> has it.
+### Do you see the trick? We have wrapped our actual parameters in Parser<T> so now we have made it sure that: 
+1. We do not get 'No TryParse method found!' error, because Parser<T> has it well defined.
 2. We parse the json and store the result in parser class.
 3. We pass the result to actual Command and Query object.
-4. Thus, we get the job done without writing the same annoying TryParse method code in every entity that we define.
+4. Thus, we get the job done without writing the same annoying TryParse method in every entity that we define.
 
-### CAUTION: Do not use \[FromQuery] or \[FromBody] in end-points. If you use those, TryParse will not get called and error will get generated.
+### CAUTION: Do not use \[FromQuery] or \[FromBody] in end-points. If you use those, TryParse will not get called and an ugly error will be generated.
 
 To provide supports for the above mentioned, the following CCC (Conditional Compilation Constants) were came to my mind:
 
