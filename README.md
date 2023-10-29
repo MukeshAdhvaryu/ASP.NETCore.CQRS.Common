@@ -12,7 +12,7 @@ OR
 Using a Minimal API template for creating a CQRS application is a faster and more efficient way.
 Creating a minimal API by choosing from .NET templates is a standard way to get started. 
 
-### I have not included comments and excluded some of the code in this file to keep it short. Actual code has all. Please rest assured that, I am not a Spaghetti maker!
+### I have not included comments and excluded some of the code in this file to keep it short. Actual code has all. Please be rest assured that, I am not a Spaghetti maker!
 
 ## Index
 [WHY?](#WHY)
