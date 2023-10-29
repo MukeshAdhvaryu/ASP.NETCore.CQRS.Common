@@ -569,8 +569,8 @@ To me, alllowing database changes from the code may turn into bad practice. But 
     }
 
 As we already talked about a model centric approach, the following internal interfaces are the key to achieve that.
-    1. IExModel 
-    2. IExModel\<TID\>
+   1. IExModel
+   2. IExModel\<TID\>
 
     internal partial interface IExModel : IModel, IExCopyable, IExParamParser, IExModelExceptionSupplier
     #if MODEL_USEDTO
@@ -615,7 +615,7 @@ Single repsonsibility interfaces:
     
     internal interface IExModelExceptionSupplier
     {
-       ModelException GetModelException(ExceptionType exceptionType, string? additionalInfo = null, Exception? innerException = null);
+       string GetModelExceptionMessage(ExceptionType exceptionType, string? additionalInfo = null);
     }
 
 Now consider an implementation of all of the above to conjure up the model centric design:
@@ -632,8 +632,8 @@ Now consider an implementation of all of the above to conjure up the model centr
        
         public string ModelName => modelName;
         
-        protected abstract Message Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed = false);
-        bool IExParamParser.Parse(IParameter parameter, out object? currentValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
+        protected abstract bool Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed = false, Criteria criteria = 0);
+        bool IExParamParser.Parse(string? propertyName, object? propertyValue, out object? parsedValue, bool updateValueIfParsed, Criteria criteria)
         {
             var name = parameter.Name;
             parsedValue = null;
@@ -782,8 +782,6 @@ Now consider an implementation of all of the above to conjure up the model centr
             return TryParseID(propertyValue, out id);
         }
     }
-
-
 That's it. 
 
 [GoTo Index](#Index)
