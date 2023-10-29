@@ -34,7 +34,7 @@ namespace CQRS.Common
             {
                 JsonSerializerOptions = new JsonSerializerOptions().AddDefaultOptions();
                 Names = new HashSet<string>(3);
-                Url = @"/{0} /{1}";
+                Url = @"/{0}/{1}";
             }
         }
         #endregion

@@ -10,12 +10,23 @@ namespace CQRS.Common.Parsers
 {
     public readonly struct Parser<T>: IParser
     {
+        /// <summary>
+        /// Indicates of T is enumerable and/or implements ISelfParser<typeparamref name="T"/> by itself.
+        /// </summary>
         [Flags]
         enum TypeInfo : byte
         {
             None,
+
+            /// <summary>
+            /// Indicates that the type is an IEnumerable
+            /// </summary>
             IsEnumerable = 0x1,
-            IsParseable = 0x2,
+
+            /// <summary>
+            /// Indicates that the type is parsable
+            /// </summary>
+            IsParsable = 0x2,
         }
 
         #region VARIABLES
@@ -32,8 +43,10 @@ namespace CQRS.Common.Parsers
 
             if (Type.IsAssignableTo(typeof(IEnumerable)))
                 Info |= TypeInfo.IsEnumerable;
-            if(Type.IsAssignableTo(typeof(ISelfParser<T>)) && (Type.IsValueType || Type.GetConstructor(Type.EmptyTypes) != null))
-                Info |= TypeInfo.IsParseable;
+
+            //Check if type is not abstract and has a parameter-less constructor and implements ISelfParser<T> interface.
+            if (Type.IsAssignableTo(typeof(ISelfParser<T>)) && (Type.IsValueType || Type.GetConstructor(Type.EmptyTypes) != null))
+                Info |= TypeInfo.IsParsable;
         }
         public Parser(T? result)
         {
@@ -42,6 +55,13 @@ namespace CQRS.Common.Parsers
         #endregion
 
         #region TRY PARSE
+        /// <summary>
+        /// Parses json string into a concrete Parser<typeparamref name="T"/> instance.
+        /// This method is required in order to API end-points to work without throwing an error.
+        /// </summary>
+        /// <param name="json">Json string to parse into an instance of type of T</param>
+        /// <param name="parser">Concrete instance of Parser<typeparamref name="T"/> class which contains an instance of T.</param>
+        /// <returns></returns>
         public static bool TryParse(string json, out Parser<T> parser)
         {
             json = json.Trim();
@@ -53,7 +73,7 @@ namespace CQRS.Common.Parsers
                     json += "]";
             }
             T? result;
-            if ((Info & TypeInfo.IsParseable) == TypeInfo.IsParseable)
+            if ((Info & TypeInfo.IsParsable) == TypeInfo.IsParsable)
             {
                 var parsable = Activator.CreateInstance(Type);
                 if(parsable != null)

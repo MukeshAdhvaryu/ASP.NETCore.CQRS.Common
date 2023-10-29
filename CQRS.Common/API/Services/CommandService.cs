@@ -18,7 +18,7 @@ namespace CQRS.Common.Services
             #region ADD
             //-:cnd:noEmit
 #if MODEL_APPENDABLE
-            app.MapPost(GetUrl("Add"), [Tags("Command")] async(Parser<TInDTO?> model) =>
+            app.MapPost(GetUrl("Add/{model}"), [Tags("Command")] async(Parser<TInDTO?> model) =>
             await Command.Add(model.Result));
 #endif
             //+:cnd:noEmit
@@ -37,8 +37,8 @@ namespace CQRS.Common.Services
             #region UPDATE
             //-:cnd:noEmit
 #if MODEL_UPDATABLE
-            app.MapPut(GetUrl("Update/{id},{model}"), [Tags("Command")] async (TID id, [FromBody] TInDTO? model) => 
-            await Command.Update(id, model));
+            app.MapPut(GetUrl("Update/{id}/{model}"), [Tags("Command")] async (TID id, Parser<TInDTO?> model) =>
+            await Command.Update(id, model.Result));
 #endif
             //+:cnd:noEmit
             #endregion
@@ -46,7 +46,7 @@ namespace CQRS.Common.Services
             #region ADD BULK
             //-:cnd:noEmit
 #if (MODEL_APPENDABLE) && MODEL_APPENDBULK
-            app.MapPost(GetUrl("AddBulk"), [Tags("Command")] async (Parser<IEnumerable<TInDTO?>?> models) =>
+            app.MapPost(GetUrl("AddBulk/{models}"), [Tags("Command")] async(Parser<IEnumerable<TInDTO?>?> models) =>
             await Command.AddRange(models.Result));
 #endif
             //+:cnd:noEmit
@@ -55,8 +55,8 @@ namespace CQRS.Common.Services
             #region UPDATE BULK
             //-:cnd:noEmit
 #if (MODEL_UPDATABLE) && MODEL_UPDATEBULK
-            app.MapPost(GetUrl("UpdateBulk"), [Tags("Command")] async([FromQuery] Parser< IEnumerable<TID>> IDs, Parser< IEnumerable<TInDTO?>?> models) =>
-            await Command.UpdateRange(IDs.Result, models.Result));
+            app.MapPut(GetUrl("UpdateBulk/{ids}/{models}"), [Tags("Command")] async (Parser<IEnumerable<TID>> ids, Parser<IEnumerable<TInDTO?>?> models) =>
+            await Command.UpdateRange(ids.Result, models.Result));
 #endif
             //+:cnd:noEmit
             #endregion
@@ -64,8 +64,8 @@ namespace CQRS.Common.Services
             #region DELETE BULK
             //-:cnd:noEmit
 #if (MODEL_DELETABLE) && MODEL_DELETEBULK
-            app.MapPost(GetUrl("DeleteBulk"), [Tags("Command")] async([FromQuery] Parser< IEnumerable<TID>> IDs) =>
-            await Command.DeleteRange(IDs.Result));
+            app.MapDelete(GetUrl("DeleteBulk/{ids}"), [Tags("Command")] async (Parser<IEnumerable<TID>> ids) =>
+            await Command.DeleteRange(ids.Result));
 #endif
             //+:cnd:noEmit
             #endregion

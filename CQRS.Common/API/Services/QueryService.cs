@@ -21,18 +21,21 @@ namespace CQRS.Common.Services
         {
             //-:cnd:noEmit
 #if (!MODEL_NONREADABLE || !MODEL_NONQUERYABLE)
-            app.MapGet(GetUrl("GetAll/{count}"), [Tags("Query")] async (int? count) =>
-            await Query.GetAll(count ?? 0));
+            app.MapGet(GetUrl("GetAll"), [Tags("Query")] async () =>
+            await Query.GetAll());
 
-            app.MapGet(GetUrl("GetPortion/{startIndex}, {count}"), [Tags("Query")] async (int startIndex, int? count) =>
-            await Query.GetAll(startIndex, count ?? 0));
+            app.MapGet(GetUrl("GetAll/{count}"), [Tags("Query")] async (int count) =>
+            await Query.GetAll(count));
+
+            app.MapGet(GetUrl("GetAll/{startIndex}/{count}"), [Tags("Query")] async (int startIndex, int count) =>
+            await Query.GetAll(startIndex, count));
 
 #if MODEL_SEARCHABLE
-            app.MapGet(GetUrl("Find"), [Tags("Query")] async (Parser<SearchParameter[]> parameters, AndOr? join) =>
-            await Query.Find(join ?? AndOr.OR, parameters.Result));
+            app.MapGet(GetUrl("Find/{join}/{parameters}"), [Tags("Query")] async (AndOr join, Parser<SearchParameter[]> parameters) =>
+            await Query.Find(join , parameters.Result));
 
-            app.MapGet(GetUrl("FindAll"), [Tags("Query")] async (Parser<SearchParameter[]> parameters, AndOr? join) =>
-            await Query.FindAll(join ?? AndOr.OR, parameters.Result));
+            app.MapGet(GetUrl("FindAll/{join}/{parameters}"), [Tags("Query")] async (AndOr join, Parser<SearchParameter[]> parameters) =>
+            await Query.FindAll(join, parameters.Result));
 #endif
 #endif
             //+:cnd:noEmit
